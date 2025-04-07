@@ -3,43 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anáhuac Calendar Visualization</title>
+    <title>Anáhuac Calendar Stone</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="background-pattern"></div>
     <div class="container">
-        <h1>Anáhuac Calendars</h1>
+        <h1>Anáhuac Calendar Stone</h1>
         <div class="calendar-container">
-            <div class="calendar" id="tzolkin">
-                <h2>Tzolkin/Tonalpohualli (260 Days)</h2>
-                <canvas id="tzolkinCanvas" width="300" height="300"></canvas>
-            </div>
-            <div class="calendar" id="haab">
-                <h2>Haab/Xiuhpohualli (365 Days)</h2>
-                <canvas id="haabCanvas" width="300" height="300"></canvas>
-            </div>
-            <div class="calendar" id="lunar">
-                <h2>Lunar Cycle (29.5 Days)</h2>
-                <canvas id="lunarCanvas" width="300" height="300"></canvas>
-            </div>
-            <div class="calendar" id="bolon">
-                <h2>Bolon Tz'ak'ab (819 Days)</h2>
-                <canvas id="bolonCanvas" width="300" height="300"></canvas>
-            </div>
+            <canvas id="calendarStone" width="600" height="600"></canvas>
         </div>
         <div class="controls">
-            <input type="date" id="dateInput" value="2025-04-06" onchange="updateCalendars()">
-            <button onclick="rotateCalendars()">Rotate</button>
+            <input type="date" id="dateInput" value="2025-04-06" onchange="alignCalendars()">
+            <button onclick="resetView()">Reset View</button>
         </div>
         <div class="info-panel" id="infoPanel"></div>
         <div class="legend">
             <h3>Legend</h3>
             <ul>
-                <li><span class="color-box" style="background-color: #6D0E10;"></span> Tzolkin/Tonalpohualli Day</li>
-                <li><span class="color-box" style="background-color: #1A3C34;"></span> Haab/Xiuhpohualli Month</li>
-                <li><span class="color-box" style="background-color: #13294B;"></span> Lunar Phase</li>
-                <li><span class="color-box" style="background-color: #4A2C2A;"></span> Bolon Tz'ak'ab Cycle</li>
+                <li><span class="color-box" style="background-color: #6D0E10;"></span> Tzolkin/Tonalpohualli</li>
+                <li><span class="color-box" style="background-color: #1A3C34;"></span> Haab/Xiuhpohualli</li>
+                <li><span class="color-box" style="background-color: #13294B;"></span> Lunar Cycle</li>
+                <li><span class="color-box" style="background-color: #4A2C2A;"></span> Bolon Tz'ak'ab</li>
             </ul>
         </div>
     </div>
