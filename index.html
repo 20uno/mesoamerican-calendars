@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesoamerican Calendar Visualization</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mesoamerican Calendars</h1>
+        <div class="calendar-container">
+            <div class="calendar" id="tzolkin">
+                <h2>Tzolkin (260 Days)</h2>
+                <canvas id="tzolkinCanvas" width="300" height="300"></canvas>
+            </div>
+            <div class="calendar" id="haab">
+                <h2>Haab (365 Days)</h2>
+                <canvas id="haabCanvas" width="300" height="300"></canvas>
+            </div>
+            <div class="calendar" id="lunar">
+                <h2>Lunar Cycle (29.5 Days)</h2>
+                <canvas id="lunarCanvas" width="300" height="300"></canvas>
+            </div>
+        </div>
+        <div class="controls">
+            <input type="date" id="dateInput" onchange="updateCalendars()">
+            <button onclick="rotateCalendars()">Rotate</button>
+        </div>
+        <div class="info-panel" id="infoPanel"></div>
+        <div class="legend">
+            <h3>Legend</h3>
+            <ul>
+                <li><span class="color-box" style="background-color: #e63946;"></span> Tzolkin Day</li>
+                <li><span class="color-box" style="background-color: #457b9d;"></span> Haab Month</li>
+                <li><span class="color-box" style="background-color: #2a9d8f;"></span> Lunar Phase</li>
+            </ul>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
