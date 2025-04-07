@@ -3,19 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anáhuac Calendar Stone</title>
+    <title>Anáhuac Calendar Wall</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="background-pattern"></div>
     <div class="container">
-        <h1>Anáhuac Calendar Stone</h1>
+        <h1>Anáhuac Calendar Wall</h1>
         <div class="calendar-container">
-            <canvas id="calendarStone" width="600" height="600"></canvas>
+            <div class="calendar-panel" id="tzolkin">
+                <h2>Tzolkin/Tonalpohualli</h2>
+                <div class="canvas-wrapper">
+                    <canvas id="tzolkinCanvas" width="200" height="400"></canvas>
+                </div>
+            </div>
+            <div class="calendar-panel" id="haab">
+                <h2>Haab/Xiuhpohualli</h2>
+                <div class="canvas-wrapper">
+                    <canvas id="haabCanvas" width="200" height="400"></canvas>
+                </div>
+            </div>
+            <div class="calendar-panel" id="lunar">
+                <h2>Lunar Cycle</h2>
+                <div class="canvas-wrapper">
+                    <canvas id="lunarCanvas" width="200" height="400"></canvas>
+                </div>
+            </div>
+            <div class="calendar-panel" id="bolon">
+                <h2>Bolon Tz'ak'ab</h2>
+                <div class="canvas-wrapper">
+                    <canvas id="bolonCanvas" width="200" height="400"></canvas>
+                </div>
+            </div>
         </div>
         <div class="controls">
             <input type="date" id="dateInput" value="2025-04-06" onchange="alignCalendars()">
-            <button onclick="resetView()">Reset View</button>
+            <button onclick="playAnimation()">Play</button>
+            <button onclick="stopAnimation()">Stop</button>
         </div>
         <div class="info-panel" id="infoPanel"></div>
         <div class="legend">
