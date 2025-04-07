@@ -1,113 +1,120 @@
-// Calendar Data (Simplified)
-const tzolkinDays = 260;
-const haabDays = 365;
-const lunarDays = 29.5;
-let currentAngle = 0;
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f1de;
+    margin: 0;
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+}
 
-const tzolkinNames = ["Imix", "Ik", "Akbal", "Kan", "Chicchan", "Cimi", "Manik", "Lamat", "Muluc", "Oc", "Chuen", "Eb", "Ben", "Ix", "Men", "Cib", "Caban", "Etznab", "Cauac", "Ahau"];
-const haabMonths = ["Pop", "Wo", "Sip", "Sotz", "Sek", "Xul", "Yaxkin", "Mol", "Chen", "Yax", "Sak", "Keh", "Mak", "Kankin", "Muwan", "Pax", "Kayab", "Kumku", "Wayeb"];
+.background-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('meso-pattern.png') repeat; /* Replace with a subtle Mesoamerican pattern */
+    opacity: 0.1;
+    z-index: -1;
+}
 
-// Canvas Setup
-const tzolkinCanvas = document.getElementById("tzolkinCanvas");
-const haabCanvas = document.getElementById("haabCanvas");
-const lunarCanvas = document.getElementById("lunarCanvas");
-const tzolkinCtx = tzolkinCanvas.getContext("2d");
-const haabCtx = haabCanvas.getContext("2d");
-const lunarCtx = lunarCanvas.getContext("2d");
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
 
-function drawWheel(ctx, segments, radius, baseColor, labels) {
-    const centerX = ctx.canvas.width / 2;
-    const centerY = ctx.canvas.height / 2;
-    const angleStep = (2 * Math.PI) / segments;
+h1 {
+    color: #3d405b;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
 
-    for (let i = 0; i < segments; i++) {
-        const startAngle = i * angleStep + currentAngle;
-        const endAngle = (i + 1) * angleStep + currentAngle;
+.calendar-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+}
 
-        // Fill segment
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-        ctx.fillStyle = baseColor;
-        ctx.fill();
-        
-        // Add outline for clarity
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#000";
-        ctx.stroke();
-        ctx.closePath();
+.calendar {
+    background: #fff;
+    border-radius: 50%;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
 
-        // Label with shadow for contrast
-        const textAngle = startAngle + angleStep / 2;
-        const textX = centerX + (radius * 0.7) * Math.cos(textAngle);
-        const textY = centerY + (radius * 0.7) * Math.sin(textAngle);
-        ctx.font = "14px Arial";
-        ctx.fillStyle = "#F4EBD0"; // Off-white text
-        ctx.strokeStyle = "#000"; // Black outline
-        ctx.lineWidth = 1;
-        ctx.strokeText(labels[i % labels.length], textX - 10, textY + 5); // Offset for centering
-        ctx.fillText(labels[i % labels.length], textX - 10, textY + 5);
+canvas {
+    cursor: pointer;
+    transition: transform 0.5s ease;
+    border: 3px solid #3d405b;
+}
+
+canvas:hover {
+    transform: scale(1.05);
+}
+
+.controls {
+    margin: 30px 0;
+}
+
+input[type="date"], button {
+    padding: 10px;
+    font-size: 1em;
+    margin: 5px;
+    border: 2px solid #3d405b;
+    border-radius: 5px;
+}
+
+button {
+    background-color: #7A1719;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #5A1113;
+}
+
+.info-panel {
+    margin: 20px auto;
+    padding: 15px;
+    background-color: #fff;
+    border: 2px solid #1E3A1F;
+    border-radius: 5px;
+    display: none;
+    max-width: 500px;
+}
+
+.legend {
+    margin-top: 20px;
+    text-align: left;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.color-box {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .calendar {
+        width: 100%;
+        max-width: 250px;
+    }
+    h2 {
+        font-size: 1.2em;
+    }
+    .calendar-container {
+        gap: 15px;
     }
 }
-
-function drawCalendars() {
-    tzolkinCtx.clearRect(0, 0, tzolkinCanvas.width, tzolkinCanvas.height);
-    haabCtx.clearRect(0, 0, haabCanvas.width, haabCanvas.height);
-    lunarCtx.clearRect(0, 0, lunarCanvas.width, lunarCanvas.height);
-
-    drawWheel(tzolkinCtx, 20, 130, "#9B1D20", tzolkinNames); // Tzolkin
-    drawWheel(haabCtx, 19, 130, "#2E5E2A", haabMonths);   // Haab
-    drawWheel(lunarCtx, 30, 130, "#1A2E59", Array(30).fill("Day")); // Lunar
-}
-
-// Interaction
-function showInfo(calendar, segment) {
-    const infoPanel = document.getElementById("infoPanel");
-    infoPanel.style.display = "block";
-    infoPanel.innerHTML = `Selected: ${calendar} - ${segment}`;
-}
-
-tzolkinCanvas.addEventListener("click", (e) => {
-    const rect = tzolkinCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left - tzolkinCanvas.width / 2;
-    const y = e.clientY - rect.top - tzolkinCanvas.height / 2;
-    const angle = Math.atan2(y, x) - currentAngle;
-    const segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle) / (2 * Math.PI / 20));
-    showInfo("Tzolkin", tzolkinNames[segment]);
-});
-
-haabCanvas.addEventListener("click", (e) => {
-    const rect = haabCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left - haabCanvas.width / 2;
-    const y = e.clientY - rect.top - haabCanvas.height / 2;
-    const angle = Math.atan2(y, x) - currentAngle;
-    const segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle) / (2 * Math.PI / 19));
-    showInfo("Haab", haabMonths[segment]);
-});
-
-lunarCanvas.addEventListener("click", (e) => {
-    const rect = lunarCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left - lunarCanvas.width / 2;
-    const y = e.clientY - rect.top - lunarCanvas.height / 2;
-    const angle = Math.atan2(y, x) - currentAngle;
-    const segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle) / (2 * Math.PI / 30));
-    showInfo("Lunar", `Day ${segment + 1}`);
-});
-
-// Animation
-function rotateCalendars() {
-    currentAngle += Math.PI / 18;
-    drawCalendars();
-    requestAnimationFrame(rotateCalendars);
-}
-
-// Date Input
-function updateCalendars() {
-    const date = new Date(document.getElementById("dateInput").value);
-    const daysSinceEpoch = Math.floor((date - new Date("1970-01-01")) / (1000 * 60 * 60 * 24));
-    currentAngle = (daysSinceEpoch % tzolkinDays) * (2 * Math.PI / tzolkinDays);
-    drawCalendars();
-}
-
-// Initial Draw
-drawCalendars();
