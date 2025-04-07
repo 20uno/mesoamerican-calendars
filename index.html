@@ -1,42 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mesoamerican Calendars</title>
+    <title>Calendarios Mesoamericanos</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="background-pattern"></div>
     <div class="container">
-        <h1>Mesoamerican Calendars</h1>
+        <h1>Calendarios Mesoamericanos</h1>
         <div class="calendar-container">
             <div class="calendar" id="tzolkin">
-                <h2>Tzolkin (260 Days)</h2>
+                <h2>Tzolkin (260 Días)</h2>
                 <canvas id="tzolkinCanvas" width="300" height="300"></canvas>
             </div>
             <div class="calendar" id="haab">
-                <h2>Haab (365 Days)</h2>
+                <h2>Haab (365 Días)</h2>
                 <canvas id="haabCanvas" width="300" height="300"></canvas>
             </div>
             <div class="calendar" id="lunar">
-                <h2>Lunar Cycle (29.5 Days)</h2>
+                <h2>Ciclo Lunar (29.5 Días)</h2>
                 <canvas id="lunarCanvas" width="300" height="300"></canvas>
             </div>
         </div>
         <div class="controls">
-            <input type="date" id="dateInput" value="2025-04-06" onchange="updateCalendars()">
-            <button onclick="advanceDay()">Next Day</button>
-            <button onclick="toggleEducationMode()">Toggle Education Mode</button>
+            <input type="date" id="dateInput" value="2025-04-06" onchange="actualizarCalendarios()">
+            <button onclick="avanzarDia()">Siguiente Día</button>
+            <button onclick="alternarModoEducativo()">Activar/Desactivar Modo Educativo</button>
         </div>
         <div class="info-panel" id="infoPanel"></div>
         <div class="education-panel" id="educationPanel" style="display: none;"></div>
         <div class="legend">
-            <h3>Legend</h3>
+            <h3>Leyenda</h3>
             <ul>
-                <li><span class="color-box" style="background-color: #6D0E10;"></span> Tzolkin Day (Today: Gold Border)</li>
-                <li><span class="color-box" style="background-color: #1A3C34;"></span> Haab Month (Today: Gold Border)</li>
-                <li><span class="color-box" style="background-color: #13294B;"></span> Lunar Phase (Today: Gold Border)</li>
+                <li><span class="color-box" style="background-color: #6D0E10;"></span> Día Tzolkin (Hoy: Borde Dorado)</li>
+                <li><span class="color-box" style="background-color: #1A3C34;"></span> Mes Haab (Hoy: Borde Dorado)</li>
+                <li><span class="color-box" style="background-color: #13294B;"></span> Fase Lunar (Hoy: Borde Dorado)</li>
             </ul>
         </div>
     </div>
