@@ -19,7 +19,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
     text-align: center;
     position: relative;
@@ -33,17 +33,38 @@ h1 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+h2 {
+    color: #2A2A2A;
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
 .calendar-container {
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.calendar-panel {
+    background: radial-gradient(circle, #BFA98A, #D9C2A3);
+    border: 4px solid #2A2A2A;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    width: 220px;
+}
+
+.canvas-wrapper {
+    height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
 }
 
 canvas {
-    cursor: pointer;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    border-radius: 50%;
-    background: radial-gradient(circle, #BFA98A, #D9C2A3);
+    display: block;
+    background: transparent;
 }
 
 .controls {
@@ -97,11 +118,11 @@ button:hover {
 }
 
 @media (max-width: 768px) {
-    canvas {
-        width: 400px;
-        height: 400px;
+    .calendar-panel {
+        width: 100%;
+        max-width: 200px;
     }
-    h1 {
-        font-size: 2em;
+    h2 {
+        font-size: 1.2em;
     }
 }
