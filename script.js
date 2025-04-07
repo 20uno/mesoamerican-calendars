@@ -1,14 +1,14 @@
-// Calendar Data
-const tzolkinDays = 260;
-const haabDays = 365;
-const lunarDays = 29.5;
-let currentAngle = 0;
-let educationMode = false;
+// Datos de los Calendarios
+const diasTzolkin = 260;
+const diasHaab = 365;
+const diasLunar = 29.5;
+let anguloActual = 0;
+let modoEducativo = false;
 
-const tzolkinNames = ["Imix", "Ik", "Akbal", "Kan", "Chicchan", "Cimi", "Manik", "Lamat", "Muluc", "Oc", "Chuen", "Eb", "Ben", "Ix", "Men", "Cib", "Caban", "Etznab", "Cauac", "Ahau"];
-const haabMonths = ["Pop", "Wo", "Sip", "Sotz", "Sek", "Xul", "Yaxkin", "Mol", "Chen", "Yax", "Sak", "Keh", "Mak", "Kankin", "Muwan", "Pax", "Kayab", "Kumku", "Wayeb"];
+const nombresTzolkin = ["Imix", "Ik", "Akbal", "Kan", "Chicchan", "Cimi", "Manik", "Lamat", "Muluc", "Oc", "Chuen", "Eb", "Ben", "Ix", "Men", "Cib", "Caban", "Etznab", "Cauac", "Ahau"];
+const mesesHaab = ["Pop", "Wo", "Sip", "Sotz", "Sek", "Xul", "Yaxkin", "Mol", "Chen", "Yax", "Sak", "Keh", "Mak", "Kankin", "Muwan", "Pax", "Kayab", "Kumku", "Wayeb"];
 
-// Canvas Setup
+// Configuración de los Canvas
 const tzolkinCanvas = document.getElementById("tzolkinCanvas");
 const haabCanvas = document.getElementById("haabCanvas");
 const lunarCanvas = document.getElementById("lunarCanvas");
@@ -16,58 +16,58 @@ const tzolkinCtx = tzolkinCanvas.getContext("2d");
 const haabCtx = haabCanvas.getContext("2d");
 const lunarCtx = lunarCanvas.getContext("2d");
 
-let todayTzolkinSegment, todayHaabSegment, todayLunarSegment;
+let segmentoHoyTzolkin, segmentoHoyHaab, segmentoHoyLunar;
 
-function drawWheel(ctx, segments, radius, colors, labels, todaySegment) {
-    const centerX = ctx.canvas.width / 2;
-    const centerY = ctx.canvas.height / 2;
-    const angleStep = (2 * Math.PI) / segments;
+function dibujarRueda(ctx, segmentos, radio, colores, etiquetas, segmentoHoy) {
+    const centroX = ctx.canvas.width / 2;
+    const centroY = ctx.canvas.height / 2;
+    const pasoAngulo = (2 * Math.PI) / segmentos;
 
-    for (let i = 0; i < segments; i++) {
-        const startAngle = i * angleStep + currentAngle;
-        const endAngle = (i + 1) * angleStep + currentAngle;
+    for (let i = 0; i < segmentos; i++) {
+        const anguloInicio = i * pasoAngulo + anguloActual;
+        const anguloFin = (i + 1) * pasoAngulo + anguloActual;
 
-        // Fill segment with alternating colors
+        // Rellenar segmento con colores alternados
         ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-        ctx.fillStyle = i % 2 === 0 ? colors[0] : colors[1];
+        ctx.moveTo(centroX, centroY);
+        ctx.arc(centroX, centroY, radio, anguloInicio, anguloFin);
+        ctx.fillStyle = i % 2 === 0 ? colores[0] : colores[1];
         ctx.fill();
 
-        // Add thicker outline
+        // Añadir contorno más grueso
         ctx.lineWidth = 3;
         ctx.strokeStyle = "#000";
         ctx.stroke();
 
-        // Highlight today's segment with a gold border
-        if (i === todaySegment) {
+        // Resaltar el segmento de "hoy" con un borde dorado
+        if (i === segmentoHoy) {
             ctx.lineWidth = 5;
-            ctx.strokeStyle = "#FFD700"; // Gold
+            ctx.strokeStyle = "#FFD700"; // Dorado
             ctx.stroke();
         }
         ctx.closePath();
 
-        // Rotate and draw label
-        const textAngle = startAngle + angleStep / 2;
-        const textX = centerX + (radius * 0.7) * Math.cos(textAngle);
-        const textY = centerY + (radius * 0.7) * Math.sin(textAngle);
+        // Rotar y dibujar etiqueta
+        const anguloTexto = anguloInicio + pasoAngulo / 2;
+        const textoX = centroX + (radio * 0.7) * Math.cos(anguloTexto);
+        const textoY = centroY + (radio * 0.7) * Math.sin(anguloTexto);
 
         ctx.save();
-        ctx.translate(textX, textY);
-        ctx.rotate(textAngle + Math.PI / 2);
+        ctx.translate(textoX, textoY);
+        ctx.rotate(anguloTexto + Math.PI / 2);
         ctx.font = "bold 14px Arial";
         ctx.fillStyle = "#F4EBD0";
         ctx.strokeStyle = "#000";
         ctx.lineWidth = 2;
         ctx.textAlign = "center";
-        ctx.strokeText(labels[i % labels.length], 0, 0);
-        ctx.fillText(labels[i % labels.length], 0, 0);
+        ctx.strokeText(etiquetas[i % etiquetas.length], 0, 0);
+        ctx.fillText(etiquetas[i % etiquetas.length], 0, 0);
         ctx.restore();
     }
 
-    // Central circle
+    // Círculo central
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius * 0.3, 0, 2 * Math.PI);
+    ctx.arc(centroX, centroY, radio * 0.3, 0, 2 * Math.PI);
     ctx.fillStyle = "#3d405b";
     ctx.fill();
     ctx.strokeStyle = "#000";
@@ -75,180 +75,180 @@ function drawWheel(ctx, segments, radius, colors, labels, todaySegment) {
     ctx.stroke();
 }
 
-function drawCalendars() {
+function dibujarCalendarios() {
     tzolkinCtx.clearRect(0, 0, tzolkinCanvas.width, tzolkinCanvas.height);
     haabCtx.clearRect(0, 0, haabCanvas.width, haabCanvas.height);
     lunarCtx.clearRect(0, 0, lunarCanvas.width, lunarCanvas.height);
 
-    drawWheel(tzolkinCtx, 20, 130, ["#6D0E10", "#8B1A1C"], tzolkinNames, todayTzolkinSegment);
-    drawWheel(haabCtx, 19, 130, ["#1A3C34", "#2A5D53"], haabMonths, todayHaabSegment);
-    drawWheel(lunarCtx, 30, 130, ["#13294B", "#1E3F6D"], Array(30).fill("Day"), todayLunarSegment);
+    dibujarRueda(tzolkinCtx, 20, 130, ["#6D0E10", "#8B1A1C"], nombresTzolkin, segmentoHoyTzolkin);
+    dibujarRueda(haabCtx, 19, 130, ["#1A3C34", "#2A5D53"], mesesHaab, segmentoHoyHaab);
+    dibujarRueda(lunarCtx, 30, 130, ["#13294B", "#1E3F6D"], Array(30).fill("Día"), segmentoHoyLunar);
 }
 
-// Calculate Today's Position
-function calculateTodayPositions() {
-    const date = new Date(document.getElementById("dateInput").value);
-    const cycleStart = new Date("2023-12-05"); // Tzolkin cycle start
-    const daysSinceCycleStart = Math.floor((date - cycleStart) / (1000 * 60 * 60 * 24));
+// Calcular la Posición de "Hoy"
+function calcularPosicionesHoy() {
+    const fecha = new Date(document.getElementById("dateInput").value);
+    const inicioCiclo = new Date("2023-12-05"); // Inicio del ciclo Tzolkin
+    const diasDesdeInicioCiclo = Math.floor((fecha - inicioCiclo) / (1000 * 60 * 60 * 24));
 
-    todayTzolkinSegment = Math.floor((daysSinceCycleStart % tzolkinDays) / (tzolkinDays / 20));
-    todayHaabSegment = Math.floor((daysSinceCycleStart % haabDays) / (haabDays / 19));
-    todayLunarSegment = Math.floor((daysSinceCycleStart % 30) / (30 / 30));
+    segmentoHoyTzolkin = Math.floor((diasDesdeInicioCiclo % diasTzolkin) / (diasTzolkin / 20));
+    segmentoHoyHaab = Math.floor((diasDesdeInicioCiclo % diasHaab) / (diasHaab / 19));
+    segmentoHoyLunar = Math.floor((diasDesdeInicioCiclo % 30) / (30 / 30));
 
-    // Update info panel with today's date
-    const infoPanel = document.getElementById("infoPanel");
-    infoPanel.style.display = "block";
-    infoPanel.innerHTML = `
-        <h3>Today's Date: ${date.toDateString()}</h3>
-        <p><b>Tzolkin:</b> ${tzolkinNames[todayTzolkinSegment]}</p>
-        <p><b>Haab:</b> ${haabMonths[todayHaabSegment]}</p>
-        <p><b>Lunar Cycle:</b> Day ${todayLunarSegment + 1}</p>
+    // Actualizar el panel de información con la fecha de hoy
+    const panelInfo = document.getElementById("infoPanel");
+    panelInfo.style.display = "block";
+    panelInfo.innerHTML = `
+        <h3>Fecha Actual: ${fecha.toLocaleDateString('es-ES')}</h3>
+        <p><b>Tzolkin:</b> ${nombresTzolkin[segmentoHoyTzolkin]}</p>
+        <p><b>Haab:</b> ${mesesHaab[segmentoHoyHaab]}</p>
+        <p><b>Ciclo Lunar:</b> Día ${segmentoHoyLunar + 1}</p>
     `;
 }
 
-// Interaction
-function showInfo(calendar, segment) {
-    const infoPanel = document.getElementById("infoPanel");
-    infoPanel.style.display = "block";
-    let content = `<h3>${calendar}</h3><p><b>Selected Segment:</b> ${segment}</p>`;
+// Interacción
+function mostrarInfo(calendario, segmento) {
+    const panelInfo = document.getElementById("infoPanel");
+    panelInfo.style.display = "block";
+    let contenido = `<h3>${calendario}</h3><p><b>Segmento Seleccionado:</b> ${segmento}</p>`;
 
-    if (calendar === "Tzolkin") {
-        content += `
-            <p><b>Structure:</b> 13 numbers x 20 signs = 260 unique combinations. Divided into 20 trecenas (13-day periods).</p>
-            <p><b>Current Cycle:</b> Started on December 5, 2023, ends on August 20, 2024.</p>
-            <p><b>Purpose:</b> Associated with the human gestation cycle. Guides personal and spiritual development through one's kin or nawal of birth.</p>
+    if (calendario === "Tzolkin") {
+        contenido += `
+            <p><b>Estructura:</b> 13 números x 20 signos = 260 combinaciones únicas. Dividido en 20 trecenas (períodos de 13 días).</p>
+            <p><b>Ciclo Actual:</b> Comenzó el 5 de diciembre de 2023 y termina el 20 de agosto de 2024.</p>
+            <p><b>Propósito:</b> Asociado con el ciclo de gestación humana. Guía el desarrollo personal y espiritual a través del kin o nawal de nacimiento.</p>
         `;
-    } else if (calendar === "Haab") {
-        content += `
-            <p><b>Structure:</b> 365 days = 18 months of 20 days + 5 days (Wayeb). Months start with number 0, first month is Pop.</p>
-            <p><b>New Year:</b> March 30, 2024 (Gregorian). Each month starts with a No'j day in Tzolkin.</p>
-            <p><b>Purpose:</b> Helps identify the environment for one's life mission. Annual energy can be calculated via the Haab birthday and Annual Mayan Cross.</p>
+    } else if (calendario === "Haab") {
+        contenido += `
+            <p><b>Estructura:</b> 365 días = 18 meses de 20 días + 5 días (Wayeb). Los meses comienzan con el número 0, el primer mes es Pop.</p>
+            <p><b>Año Nuevo:</b> 30 de marzo de 2024 (Gregoriano). Cada mes comienza con un día No'j en el Tzolkin.</p>
+            <p><b>Propósito:</b> Ayuda a identificar el entorno para la misión de vida. La energía anual se puede calcular con el cumpleaños Haab y la Cruz Maya Anual.</p>
         `;
-    } else if (calendar === "Lunar") {
-        content += `
-            <p><b>Structure:</b> Simplified 29.5-day lunar cycle for visualization.</p>
-            <p><b>Purpose:</b> Represents lunar influences, often tied to emotional and spiritual rhythms in Mesoamerican cosmology.</p>
+    } else if (calendario === "Ciclo Lunar") {
+        contenido += `
+            <p><b>Estructura:</b> Ciclo lunar simplificado de 29.5 días para visualización.</p>
+            <p><b>Propósito:</b> Representa las influencias lunares, a menudo vinculadas a ritmos emocionales y espirituales en la cosmología mesoamericana.</p>
         `;
     }
 
-    infoPanel.innerHTML = content;
+    panelInfo.innerHTML = contenido;
 }
 
 tzolkinCanvas.addEventListener("click", (e) => {
     const rect = tzolkinCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left - tzolkinCanvas.width / 2;
     const y = e.clientY - rect.top - tzolkinCanvas.height / 2;
-    const angle = Math.atan2(y, x) - currentAngle;
-    const segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle) / (2 * Math.PI / 20));
-    showInfo("Tzolkin", tzolkinNames[segment]);
+    const angulo = Math.atan2(y, x) - anguloActual;
+    const segmento = Math.floor((angulo < 0 ? angulo + 2 * Math.PI : angulo) / (2 * Math.PI / 20));
+    mostrarInfo("Tzolkin", nombresTzolkin[segmento]);
 });
 
 haabCanvas.addEventListener("click", (e) => {
     const rect = haabCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left - haabCanvas.width / 2;
     const y = e.clientY - rect.top - haabCanvas.height / 2;
-    const angle = Math.atan2(y, x) - currentAngle;
-    const segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle) / (2 * Math.PI / 19));
-    showInfo("Haab", haabMonths[segment]);
+    const angulo = Math.atan2(y, x) - anguloActual;
+    const segmento = Math.floor((angulo < 0 ? angulo + 2 * Math.PI : angulo) / (2 * Math.PI / 19));
+    mostrarInfo("Haab", mesesHaab[segmento]);
 });
 
 lunarCanvas.addEventListener("click", (e) => {
     const rect = lunarCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left - lunarCanvas.width / 2;
     const y = e.clientY - rect.top - lunarCanvas.height / 2;
-    const angle = Math.atan2(y, x) - currentAngle;
-    const segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle) / (2 * Math.PI / 30));
-    showInfo("Lunar", `Day ${segment + 1}`);
+    const angulo = Math.atan2(y, x) - anguloActual;
+    const segmento = Math.floor((angulo < 0 ? angulo + 2 * Math.PI : angulo) / (2 * Math.PI / 30));
+    mostrarInfo("Ciclo Lunar", `Día ${segmento + 1}`);
 });
 
-// Advance One Day
-function advanceDay() {
-    const dateInput = document.getElementById("dateInput");
-    const currentDate = new Date(dateInput.value);
-    currentDate.setDate(currentDate.getDate() + 1);
-    dateInput.value = currentDate.toISOString().split("T")[0];
-    updateCalendars();
+// Avanzar un Día
+function avanzarDia() {
+    const entradaFecha = document.getElementById("dateInput");
+    const fechaActual = new Date(entradaFecha.value);
+    fechaActual.setDate(fechaActual.getDate() + 1);
+    entradaFecha.value = fechaActual.toISOString().split("T")[0];
+    actualizarCalendarios();
 }
 
-// Date Input
-function updateCalendars() {
-    const date = new Date(document.getElementById("dateInput").value);
-    const daysSinceEpoch = Math.floor((date - new Date("1970-01-01")) / (1000 * 60 * 60 * 24));
-    currentAngle = (daysSinceEpoch % tzolkinDays) * (2 * Math.PI / tzolkinDays);
-    calculateTodayPositions();
-    drawCalendars();
+// Entrada de Fecha
+function actualizarCalendarios() {
+    const fecha = new Date(document.getElementById("dateInput").value);
+    const diasDesdeEpoca = Math.floor((fecha - new Date("1970-01-01")) / (1000 * 60 * 60 * 24));
+    anguloActual = (diasDesdeEpoca % diasTzolkin) * (2 * Math.PI / diasTzolkin);
+    calcularPosicionesHoy();
+    dibujarCalendarios();
 }
 
-// Toggle Education Mode
-function toggleEducationMode() {
-    educationMode = !educationMode;
-    const educationPanel = document.getElementById("educationPanel");
-    educationPanel.style.display = educationMode ? "block" : "none";
+// Alternar Modo Educativo
+function alternarModoEducativo() {
+    modoEducativo = !modoEducativo;
+    const panelEducativo = document.getElementById("educationPanel");
+    panelEducativo.style.display = modoEducativo ? "block" : "none";
 
-    if (educationMode) {
-        educationPanel.innerHTML = `
-            <h3>Understanding Mesoamerican Calendars</h3>
-            <h4>Tzolkin (260 Days)</h4>
-            <p><b>Structure:</b> Combines 13 numbers with 20 day signs (e.g., Imix, Ik, etc.), creating 260 unique combinations. Each day sign has a symbolic meaning:</p>
+    if (modoEducativo) {
+        panelEducativo.innerHTML = `
+            <h3>Entendiendo los Calendarios Mesoamericanos</h3>
+            <h4>Tzolkin (260 Días)</h4>
+            <p><b>Estructura:</b> Combina 13 números con 20 signos (por ejemplo, Imix, Ik, etc.), creando 260 combinaciones únicas. Cada signo tiene un significado simbólico:</p>
             <ul>
-                <li><b>Imix:</b> Waterlily, crocodile, birth, and beginnings.</li>
-                <li><b>Ik:</b> Wind, breath, spirit, communication.</li>
-                <li><b>Akbal:</b> Night, darkness, introspection.</li>
-                <li><b>Kan:</b> Seed, growth, potential.</li>
-                <li><b>Chicchan:</b> Serpent, wisdom, transformation.</li>
-                <li><b>Cimi:</b> Death, transition, rebirth.</li>
-                <li><b>Manik:</b> Deer, healing, stability.</li>
-                <li><b>Lamat:</b> Rabbit, abundance, fertility.</li>
-                <li><b>Muluc:</b> Water, offering, purification.</li>
-                <li><b>Oc:</b> Dog, loyalty, guidance.</li>
-                <li><b>Chuen:</b> Monkey, creativity, playfulness.</li>
-                <li><b>Eb:</b> Road, human life, destiny.</li>
-                <li><b>Ben:</b> Reed, growth, authority.</li>
-                <li><b>Ix:</b> Jaguar, magic, earth connection.</li>
-                <li><b>Men:</b> Eagle, vision, freedom.</li>
-                <li><b>Cib:</b> Owl, wisdom, ancestors.</li>
-                <li><b>Caban:</b> Earth, intelligence, movement.</li>
-                <li><b>Etznab:</b> Flint, clarity, truth.</li>
-                <li><b>Cauac:</b> Storm, transformation, renewal.</li>
-                <li><b>Ahau:</b> Sun, enlightenment, leadership.</li>
+                <li><b>Imix:</b> Nenúfar, cocodrilo, nacimiento y comienzos.</li>
+                <li><b>Ik:</b> Viento, aliento, espíritu, comunicación.</li>
+                <li><b>Akbal:</b> Noche, oscuridad, introspección.</li>
+                <li><b>Kan:</b> Semilla, crecimiento, potencial.</li>
+                <li><b>Chicchan:</b> Serpiente, sabiduría, transformación.</li>
+                <li><b>Cimi:</b> Muerte, transición, renacimiento.</li>
+                <li><b>Manik:</b> Venado, curación, estabilidad.</li>
+                <li><b>Lamat:</b> Conejo, abundancia, fertilidad.</li>
+                <li><b>Muluc:</b> Agua, ofrenda, purificación.</li>
+                <li><b>Oc:</b> Perro, lealtad, guía.</li>
+                <li><b>Chuen:</b> Mono, creatividad, alegría.</li>
+                <li><b>Eb:</b> Camino, vida humana, destino.</li>
+                <li><b>Ben:</b> Caña, crecimiento, autoridad.</li>
+                <li><b>Ix:</b> Jaguar, magia, conexión con la tierra.</li>
+                <li><b>Men:</b> Águila, visión, libertad.</li>
+                <li><b>Cib:</b> Búho, sabiduría, ancestros.</li>
+                <li><b>Caban:</b> Tierra, inteligencia, movimiento.</li>
+                <li><b>Etznab:</b> Pedernal, claridad, verdad.</li>
+                <li><b>Cauac:</b> Tormenta, transformación, renovación.</li>
+                <li><b>Ahau:</b> Sol, iluminación, liderazgo.</li>
             </ul>
-            <p><b>Relation to Gregorian Calendar:</b> The Tzolkin does not align directly with the Gregorian calendar due to its 260-day cycle. However, correlations like the Goodman-Martinez-Thompson (GMT) correlation are used to map Tzolkin dates to Gregorian dates. For example, December 5, 2023, marked the start of a new Tzolkin cycle (1 Imix).</p>
-            <p><b>Relation to Long Count:</b> The Tzolkin, combined with the Haab, forms part of the Calendar Round (52-year cycle). The Long Count tracks longer periods (e.g., 13.0.0.0.0 4 Ahau 8 Cumku corresponds to August 11, 3114 BCE in the GMT correlation). Today, April 6, 2025, corresponds to approximately 13.0.12.7.3 in the Long Count (based on the GMT correlation).</p>
+            <p><b>Relación con el Calendario Gregoriano:</b> El Tzolkin no se alinea directamente con el calendario gregoriano debido a su ciclo de 260 días. Sin embargo, se usa la correlación Goodman-Martinez-Thompson (GMT) para mapear fechas. Por ejemplo, el 5 de diciembre de 2023 fue 1 Imix, marcando el inicio de un nuevo ciclo.</p>
+            <p><b>Relación con el Calendario Largo:</b> El Tzolkin, combinado con el Haab, forma el "Ciclo de Calendario" (ciclo de 52 años). El Calendario Largo (Long Count) mide períodos más largos en unidades de kin (días), uinal (20 días), tun (360 días), katun (7200 días) y baktun (144,000 días). Hoy, 6 de abril de 2025, corresponde aproximadamente a 13.0.12.7.3 en el Calendario Largo (según la correlación GMT).</p>
 
-            <h4>Haab (365 Days)</h4>
-            <p><b>Structure:</b> 18 months of 20 days each, plus 5 "Wayeb" days. The months are:</p>
+            <h4>Haab (365 Días)</h4>
+            <p><b>Estructura:</b> 18 meses de 20 días cada uno, más 5 días "Wayeb". Los meses son:</p>
             <ul>
-                <li><b>Pop:</b> Mat, beginnings, leadership (March 30, 2024 - April 18, 2024).</li>
-                <li><b>Wo:</b> Black conjunction, reflection (April 19 - May 8).</li>
-                <li><b>Sip:</b> Red conjunction, hunting (May 9 - May 28).</li>
-                <li><b>Sotz:</b> Bat, secrecy (May 29 - June 17).</li>
-                <li><b>Sek:</b> Sky and earth, warmth (June 18 - July 7).</li>
-                <li><b>Xul:</b> Dog, endings (July 8 - July 27).</li>
-                <li><b>Yaxkin:</b> New sun, renewal (July 28 - August 16).</li>
-                <li><b>Mol:</b> Water, gathering (August 17 - September 5).</li>
-                <li><b>Chen:</b> Black storm, well (September 6 - September 25).</li>
-                <li><b>Yax:</b> Green storm, strength (September 26 - October 15).</li>
-                <li><b>Sak:</b> White storm, light (October 16 - November 4).</li>
-                <li><b>Keh:</b> Red storm, deer (November 5 - November 24).</li>
-                <li><b>Mak:</b> Enclosed, introspection (November 25 - December 14).</li>
-                <li><b>Kankin:</b> Yellow sun, unfolding (December 15 - January 3, 2025).</li>
-                <li><b>Muwan:</b> Owl, rain (January 4 - January 23).</li>
-                <li><b>Pax:</b> Planting, music (January 24 - February 12).</li>
-                <li><b>Kayab:</b> Turtle, harvest (February 13 - March 4).</li>
-                <li><b>Kumku:</b> Granary, ripening (March 5 - March 24).</li>
-                <li><b>Wayeb:</b> 5 unlucky days, rest (March 25 - March 29).</li>
+                <li><b>Pop:</b> Estera, comienzos, liderazgo (30 de marzo de 2024 - 18 de abril de 2024).</li>
+                <li><b>Wo:</b> Conjunción negra, reflexión (19 de abril - 8 de mayo).</li>
+                <li><b>Sip:</b> Conjunción roja, caza (9 de mayo - 28 de mayo).</li>
+                <li><b>Sotz:</b> Murciélago, secreto (29 de mayo - 17 de junio).</li>
+                <li><b>Sek:</b> Cielo y tierra, calor (18 de junio - 7 de julio).</li>
+                <li><b>Xul:</b> Perro, finales (8 de julio - 27 de julio).</li>
+                <li><b>Yaxkin:</b> Sol nuevo, renovación (28 de julio - 16 de agosto).</li>
+                <li><b>Mol:</b> Agua, reunión (17 de agosto - 5 de septiembre).</li>
+                <li><b>Chen:</b> Tormenta negra, pozo (6 de septiembre - 25 de septiembre).</li>
+                <li><b>Yax:</b> Tormenta verde, fuerza (26 de septiembre - 15 de octubre).</li>
+                <li><b>Sak:</b> Tormenta blanca, luz (16 de octubre - 4 de noviembre).</li>
+                <li><b>Keh:</b> Tormenta roja, venado (5 de noviembre - 24 de noviembre).</li>
+                <li><b>Mak:</b> Encerrado, introspección (25 de noviembre - 14 de diciembre).</li>
+                <li><b>Kankin:</b> Sol amarillo, despliegue (15 de diciembre - 3 de enero de 2025).</li>
+                <li><b>Muwan:</b> Búho, lluvia (4 de enero - 23 de enero).</li>
+                <li><b>Pax:</b> Siembra, música (24 de enero - 12 de febrero).</li>
+                <li><b>Kayab:</b> Tortuga, cosecha (13 de febrero - 4 de marzo).</li>
+                <li><b>Kumku:</b> Granero, maduración (5 de marzo - 24 de marzo).</li>
+                <li><b>Wayeb:</b> 5 días desafortunados, descanso (25 de marzo - 29 de marzo).</li>
             </ul>
-            <p><b>Relation to Gregorian Calendar:</b> The Haab aligns more closely with the Gregorian calendar due to its 365-day cycle, but it does not account for leap years, causing a drift over time. The Haab New Year on March 30, 2024, marks the start of Pop.</p>
-            <p><b>Relation to Long Count:</b> The Haab, combined with the Tzolkin, forms the Calendar Round. A specific Tzolkin-Haab combination (e.g., 4 Ahau 8 Cumku) repeats every 52 years, but the Long Count uniquely identifies each day over a much longer period.</p>
+            <p><b>Relación con el Calendario Gregoriano:</b> El Haab se alinea más con el calendario gregoriano debido a su ciclo de 365 días, pero no incluye años bisiestos, causando un desfase con el tiempo. El Año Nuevo Haab comenzó el 30 de marzo de 2024, marcando el inicio de Pop.</p>
+            <p><b>Relación con el Calendario Largo:</b> El Haab, combinado con el Tzolkin, forma el Ciclo de Calendario. Una combinación específica (como 4 Ahau 8 Cumku) se repite cada 52 años, pero el Calendario Largo identifica de manera única cada día en un período mucho más largo.</p>
 
-            <h4>Lunar Cycle (29.5 Days)</h4>
-            <p><b>Structure:</b> A simplified 29.5-day cycle to represent lunar phases, which were significant in Mesoamerican cosmology.</p>
-            <p><b>Relation to Gregorian Calendar:</b> The lunar cycle aligns with the moon's synodic period (29.53 days). Day 1 corresponds to the new moon closest to the input date.</p>
-            <p><b>Relation to Long Count:</b> Lunar cycles were tracked in the Long Count inscriptions, often as part of the "Lunar Series" (e.g., recording the moon's age on a specific date).</p>
+            <h4>Ciclo Lunar (29.5 Días)</h4>
+            <p><b>Estructura:</b> Un ciclo lunar simplificado de 29.5 días para representar las fases lunares, que eran significativas en la cosmología mesoamericana.</p>
+            <p><b>Relación con el Calendario Gregoriano:</b> El ciclo lunar de 29.5 días se alinea con el período sinódico real de la luna (29.53 días). El Día 1 corresponde a la luna nueva más cercana a la fecha ingresada.</p>
+            <p><b>Relación con el Calendario Largo:</b> Los ciclos lunares se registraban en las inscripciones del Calendario Largo, a menudo como parte de la "Serie Lunar" (por ejemplo, registrando la edad de la luna en una fecha específica).</p>
         `;
     }
 }
 
-// Initial Draw
-calculateTodayPositions();
-drawCalendars();
+// Dibujo Inicial
+calcularPosicionesHoy();
+dibujarCalendarios();
