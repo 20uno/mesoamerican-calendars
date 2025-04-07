@@ -164,11 +164,28 @@ function animarSol() {
     requestAnimationFrame(animarSol);
 }
 
-// Calcular la Posición de "Hoy" y Mostrar el Resultado
+// Calcular el Conteo Largo
+function calcularConteoLargo(fecha) {
+    const fechaInicio = new Date("3114-08-14T00:00:00Z"); // 14 de agosto de 3114 a.C.
+    const diasTranscurridos = Math.floor((fecha - fechaInicio) / (1000 * 60 * 60 * 24));
+
+    const baktun = Math.floor(diasTranscurridos / 144000);
+    const restoBaktun = diasTranscurridos % 144000;
+    const katun = Math.floor(restoBaktun / 7200);
+    const restoKatun = restoBaktun % 7200;
+    const tun = Math.floor(restoKatun / 360);
+    const restoTun = restoKatun % 360;
+    const winal = Math.floor(restoTun / 20);
+    const kin = restoTun % 20;
+
+    return `${baktun}.${katun}.${tun}.${winal}.${kin}`;
+}
+
+// Calcular la Posición de "Hoy"
 function calcularPosicionesHoy() {
     const fecha = new Date(document.getElementById("dateInput").value);
     const inicioCicloTzolkin = new Date("2023-12-05"); // Inicio del ciclo Tzolkin (1 Imix)
-    const inicioCicloHaab = new Date("2024-12-02"); // Ajustado para que Yaxkin sea correcto
+    const inicioCicloHaab = new Date("2024-12-02"); // Inicio del ciclo Haab (0 Pop)
     const diasDesdeInicioTzolkin = Math.floor((fecha - inicioCicloTzolkin) / (1000 * 60 * 60 * 24));
     const diasDesdeInicioHaab = Math.floor((fecha - inicioCicloHaab) / (1000 * 60 * 60 * 24));
 
@@ -186,30 +203,30 @@ function calcularPosicionesHoy() {
         segmentoHoyHaabMes = 18; // Wayeb
     }
 
-    // Actualizar los ángulos según la fecha
-    tzolkinAngle = (diasDesdeInicioTzolkin % diasTzolkin) * (2 * Math.PI / diasTzolkin);
-    haabAngle = (diasDesdeInicioHaab % diasHaab) * (2 * Math.PI / diasHaab);
+    // Ajustar los ángulos para que los segmentos "hoy" se alineen en el punto de contacto
+    // El Tzolk'in toca al Haab' en su lado derecho (90°, π/2 radianes)
+    // El Haab' toca al Tzolk'in en su lado izquierdo (270°, 3π/2 radianes)
+    const pasoAnguloTzolkin = (2 * Math.PI) / 20; // 20 segmentos para los nombres del Tzolk'in
+    const anguloHoyTzolkin = segmentoHoyTzolkinNombre * pasoAnguloTzolkin;
+    tzolkinAngle = (Math.PI / 2) - anguloHoyTzolkin; // Alineamos "hoy" a 90°
+
+    const pasoAnguloHaab = (2 * Math.PI) / 19; // 19 segmentos para los meses del Haab'
+    const anguloHoyHaabMes = segmentoHoyHaabMes * pasoAnguloHaab;
+    haabAngle = (3 * Math.PI / 2) - anguloHoyHaabMes; // Alineamos "hoy" a 270°
 
     // Calcular el resultado de la Rueda Calendárica
     const numeroTzolkin = (diaTzolkin % 13) || 13;
     const nombreTzolkin = nombresTzolkin[segmentoHoyTzolkinNombre];
     const numeroHaab = diaHaab <= 360 ? (diaHaab % 20) || 20 : (diaHaab - 360);
     const mesHaab = mesesHaab[segmentoHoyHaabMes];
-    const longCount = "13.0.12.7.3"; // Ejemplo fijo para la fecha actual
-
-    // Mostrar el resultado en el centro
-    const calendarResult = document.getElementById("calendarResult");
-    calendarResult.innerHTML = `
-        <p><b>Fecha:</b> ${fecha.toLocaleDateString('es-ES')}</p>
-        <p><b>Rueda Calendárica:</b> ${numeroTzolkin} ${nombreTzolkin} ${numeroHaab} ${mesHaab}</p>
-        <p><b>Conteo Largo:</b> ${longCount}</p>
-    `;
+    const longCount = calcularConteoLargo(fecha);
 
     // Actualizar el panel de información
     const panelInfo = document.getElementById("infoPanel");
     panelInfo.style.display = "block";
     panelInfo.innerHTML = `
         <h3>Fecha: ${fecha.toLocaleDateString('es-ES')}</h3>
+        <p><b>Rueda Calendárica:</b> ${numeroTzolkin} ${nombreTzolkin} ${numeroHaab} ${mesHaab}</p>
         <p><b>Tzolk'in:</b> ${numeroTzolkin} ${nombreTzolkin} (Día ${diaTzolkin}/260)</p>
         <p><b>Haab':</b> ${numeroHaab} ${mesHaab} (Día ${diaHaab}/365)</p>
         <p><b>Conteo Largo:</b> ${longCount}</p>
@@ -323,7 +340,7 @@ function alternarModoEducativo() {
             <div class="education-column">
                 <h3>Calendario Sagrado (Tzolk'in)</h3>
                 <p><b>Duración:</b> 260 días. Conocido como Tzolk’in por los mayas y Tonalpohualli por los aztecas. Se cree que 260 días corresponden a la duración de un embarazo humano.</p>
-                <p><b>Estructura:</b> Compuesto por 13 meses de 20 días cada uno. Cada día tiene asociaciones y presagios específicos. Ejemplo: 1 Imix, 2 Ik’, 3 Ak’b’al, hasta 13 Ben, luego reinicia a 1 Ik’.</p>
+                <p><b>Estructura:</b> Combina 13 números (1 al 13) con 20 nombres de días. Ejemplo: 1 Imix, 2 Ik’, 3 Ak’b’al, hasta 13 Ben, luego reinicia a 1 Ix. Total: 260 días.</p>
                 <p><b>Significados:</b></p>
                 <ul>
                     <li>Imix: Cocodrilo, comienzos.</li>
@@ -350,8 +367,8 @@ function alternarModoEducativo() {
             </div>
             <div class="education-column">
                 <h3>Calendario Solar (Haab')</h3>
-                <p><b>Duración:</b> 365 días. Conocido como Haab por los mayas y Tonalpohualli por los aztecas. Compuesto por 18 meses de 20 días más 5 días adicionales considerados desafortunados (Wayeb).</p>
-                <p><b>Estructura:</b> Cada mes tiene una forma consistente de numerar los días. Ejemplo: 1 Pop, 2 Pop, 3 Pop, hasta 20 Pop, luego pasa al siguiente mes.</p>
+                <p><b>Duración:</b> 365 días. Conocido como Haab por los mayas y Tonalpohualli por los aztecas. Compuesto por 18 meses de 20 días más 5 días adicionales (Wayeb).</p>
+                <p><b>Estructura:</b> 18 meses de 20 días (0 a 19) + 5 días de Wayeb (0 a 4). Ejemplo: 0 Pop, 1 Pop, ..., 19 Pop, luego 0 Wo, ..., hasta 0 Wayeb, ..., 4 Wayeb.</p>
                 <p><b>Significados:</b></p>
                 <ul>
                     <li>Pop: Estera, liderazgo.</li>
@@ -377,13 +394,13 @@ function alternarModoEducativo() {
             </div>
             <div class="education-column">
                 <h3>Conteo Largo</h3>
-                <p><b>Propósito:</b> Para resolver la ambigüedad en la datación histórica, se creó el Conteo Largo. Permite anclar fechas a eventos históricos específicos mediante un conteo lineal de días. Los mayas fueron los principales usuarios.</p>
-                <p><b>Estructura:</b> Cuenta los días desde el 14 de agosto de 3114 a.C. Unidades: Kin (1 día), Winal (20 días), Tun (360 días), K'atun (20 Tun), Baktun (20 K'atun).</p>
+                <p><b>Propósito:</b> Sistema lineal para registrar fechas históricas. Cuenta los días desde el 14 de agosto de 3114 a.C.</p>
+                <p><b>Estructura:</b> Unidades: Kin (1 día), Winal (20 días), Tun (360 días), K'atun (20 Tun), Baktun (20 K'atun). Formato: Baktun.K'atun.Tun.Winal.Kin.</p>
                 <p><b>Ejemplo:</b> 13.0.12.7.3 (6 abr 2025).</p>
                 <h3>Percepción del Tiempo</h3>
-                <p>A diferencia de la visión lineal del tiempo en culturas occidentales, los mesoamericanos veían el tiempo como un ciclo. Cada fecha tenía sus propios presagios, que se repetían.</p>
+                <p>Los mesoamericanos veían el tiempo como cíclico. Cada fecha tenía presagios que se repetían cada 52 años.</p>
                 <h3>Conclusión</h3>
-                <p>El calendario mesoamericano es considerado uno de los más impresionantes jamás creados. Su complejidad refleja una profunda comprensión del tiempo y los ciclos naturales.</p>
+                <p>El calendario mesoamericano es uno de los más impresionantes jamás creados, reflejando una profunda comprensión del tiempo y los ciclos naturales.</p>
             </div>
         `;
     }
