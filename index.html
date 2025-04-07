@@ -10,11 +10,18 @@
     <div class="background-pattern"></div>
     <div class="container">
         <h1>Calendario Mesoamericano</h1>
-        <div class="calendar-container">
-            <canvas id="calendarCanvas" width="400" height="400"></canvas>
+        <div class="calendars-wrapper">
+            <div class="calendar-container">
+                <h2>Tzolk'in</h2>
+                <canvas id="tzolkinCanvas" width="400" height="400"></canvas>
+            </div>
+            <div class="calendar-container">
+                <h2>Haab'</h2>
+                <canvas id="haabCanvas" width="400" height="400"></canvas>
+            </div>
         </div>
         <div class="controls">
-            <input type="date" id="dateInput" value="2025-04-06" onchange="actualizarCalendario()">
+            <input type="date" id="dateInput" value="2025-04-06" onchange="actualizarCalendarios()">
             <button onclick="avanzarDia()">Siguiente Día</button>
             <button onclick="avanzarTrecena()">Siguiente Trecena</button>
             <button onclick="avanzarMesHaab()">Siguiente Mes</button>
@@ -25,9 +32,8 @@
         <div class="legend">
             <h3>Leyenda</h3>
             <ul>
-                <li><span class="color-box" style="background-color: #00D4FF;"></span> Tzolkin (Hoy: Borde Verde Neón)</li>
-                <li><span class="color-box" style="background-color: #00D4FF;"></span> Haab (Hoy: Borde Verde Neón)</li>
-                <li><span class="color-box" style="background-color: #00D4FF;"></span> Ciclo Lunar (Hoy: Borde Verde Neón)</li>
+                <li><span class="color-box" style="background-color: #00D4FF;"></span> Tzolk'in (Hoy: Borde Verde Neón)</li>
+                <li><span class="color-box" style="background-color: #00D4FF;"></span> Haab' (Hoy: Borde Verde Neón)</li>
             </ul>
         </div>
     </div>
