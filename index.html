@@ -3,32 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendarios Mesoamericanos</title>
+    <title>Calendario Mesoamericano</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="background-pattern"></div>
     <div class="container">
-        <h1>Calendarios Mesoamericanos</h1>
+        <h1>Calendario Mesoamericano</h1>
         <div class="calendar-container">
-            <div class="calendar" id="tzolkin">
-                <h2>Tzolkin (260 Días)</h2>
-                <canvas id="tzolkinCanvas" width="300" height="300"></canvas>
-                <div class="progress-bar" id="tzolkinProgress"></div>
-            </div>
-            <div class="calendar" id="haab">
-                <h2>Haab (365 Días)</h2>
-                <canvas id="haabCanvas" width="300" height="300"></canvas>
-                <div class="progress-bar" id="haabProgress"></div>
-            </div>
-            <div class="calendar" id="lunar">
-                <h2>Ciclo Lunar (29.5 Días)</h2>
-                <canvas id="lunarCanvas" width="300" height="300"></canvas>
-                <div class="progress-bar" id="lunarProgress"></div>
-            </div>
+            <canvas id="calendarCanvas" width="600" height="600"></canvas>
         </div>
         <div class="controls">
-            <input type="date" id="dateInput" value="2025-04-06" onchange="actualizarCalendarios()">
+            <input type="date" id="dateInput" value="2025-04-06" onchange="actualizarCalendario()">
             <button onclick="avanzarDia()">Siguiente Día</button>
             <button onclick="avanzarTrecena()">Siguiente Trecena (13 Días)</button>
             <button onclick="avanzarMesHaab()">Siguiente Mes Haab (20 Días)</button>
@@ -39,9 +25,9 @@
         <div class="legend">
             <h3>Leyenda</h3>
             <ul>
-                <li><span class="color-box" style="background-color: #6D0E10;"></span> Día Tzolkin (Hoy: Borde Dorado)</li>
-                <li><span class="color-box" style="background-color: #1A3C34;"></span> Mes Haab (Hoy: Borde Dorado)</li>
-                <li><span class="color-box" style="background-color: #13294B;"></span> Fase Lunar (Hoy: Borde Dorado)</li>
+                <li><span class="color-box" style="background-color: #6D0E10;"></span> Tzolkin (Hoy: Borde Dorado)</li>
+                <li><span class="color-box" style="background-color: #1A3C34;"></span> Haab (Hoy: Borde Dorado)</li>
+                <li><span class="color-box" style="background-color: #13294B;"></span> Ciclo Lunar (Hoy: Borde Dorado)</li>
             </ul>
         </div>
     </div>
