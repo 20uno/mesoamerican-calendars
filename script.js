@@ -4,6 +4,7 @@ const diasHaab = 365;
 const diasLunar = 29.5;
 let anguloActual = 0;
 let modoEducativo = false;
+let solRotation = 0;
 
 const nombresTzolkin = ["Imix", "Ik", "Akbal", "Kan", "Chicchan", "Cimi", "Manik", "Lamat", "Muluc", "Oc", "Chuen", "Eb", "Ben", "Ix", "Men", "Cib", "Caban", "Etznab", "Cauac", "Ahau"];
 const mesesHaab = ["Pop", "Wo", "Sip", "Sotz", "Sek", "Xul", "Yaxkin", "Mol", "Chen", "Yax", "Sak", "Keh", "Mak", "Kankin", "Muwan", "Pax", "Kayab", "Kumku", "Wayeb"];
@@ -15,7 +16,7 @@ const ctx = calendarCanvas.getContext("2d");
 let diaTzolkin, diaHaab, diaLunar;
 let segmentoHoyTzolkin, segmentoHoyHaab, segmentoHoyLunar;
 
-function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, etiquetas, segmentoHoy, numeroDia, diasTotales, diaActual) {
+function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, etiquetas, segmentoHoy, numeroDia, diasTotales, diaActual, mostrarNumeros = false) {
     const centroX = ctx.canvas.width / 2;
     const centroY = ctx.canvas.height / 2;
     const pasoAngulo = (2 * Math.PI) / segmentos;
@@ -33,13 +34,13 @@ function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, et
 
         // Contorno
         ctx.lineWidth = 2;
-        ctx.strokeStyle = "#000";
+        ctx.strokeStyle = "#00D4FF";
         ctx.stroke();
 
         // Resaltar "hoy"
         if (i === segmentoHoy) {
             ctx.lineWidth = 4;
-            ctx.strokeStyle = "#FFD700";
+            ctx.strokeStyle = "#00FF66";
             ctx.stroke();
         }
         ctx.closePath();
@@ -54,8 +55,8 @@ function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, et
         ctx.translate(textoX, textoY);
         ctx.rotate(anguloTexto + Math.PI / 2);
         ctx.font = "bold 12px Arial";
-        ctx.fillStyle = "#F4EBD0";
-        ctx.strokeStyle = "#000";
+        ctx.fillStyle = "#E0FFFF";
+        ctx.strokeStyle = "#00D4FF";
         ctx.lineWidth = 1;
         ctx.textAlign = "center";
         let etiqueta = etiquetas[i % etiquetas.length];
@@ -65,14 +66,83 @@ function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, et
         ctx.strokeText(etiqueta, 0, 0);
         ctx.fillText(etiqueta, 0, 0);
         ctx.restore();
+
+        // Números (puntos y barras) si aplica
+        if (mostrarNumeros) {
+            const numero = (i % 13) + 1;
+            const puntos = numero % 5;
+            const barras = Math.floor(numero / 5);
+            const numeroX = centroX + (radioInterior + 10) * Math.cos(anguloTexto);
+            const numeroY = centroY + (radioInterior + 10) * Math.sin(anguloTexto);
+
+            ctx.save();
+            ctx.translate(numeroX, numeroY);
+            ctx.rotate(anguloTexto + Math.PI / 2);
+            ctx.fillStyle = "#00FF66";
+            for (let b = 0; b < barras; b++) {
+                ctx.fillRect(-10, -5 + b * 10, 20, 5);
+            }
+            for (let p = 0; p < puntos; p++) {
+                ctx.beginPath();
+                ctx.arc(-5 + p * 5, barras * 10 + 5, 2, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
     }
 
     // Indicador de progreso
     ctx.beginPath();
     ctx.arc(centroX, centroY, radioInterior - 5, 0, (diaActual / diasTotales) * 2 * Math.PI);
     ctx.lineWidth = 3;
-    ctx.strokeStyle = colores[0];
+    ctx.strokeStyle = "#00FF66";
     ctx.stroke();
+}
+
+function dibujarSol(ctx) {
+    const centroX = ctx.canvas.width / 2;
+    const centroY = ctx.canvas.height / 2;
+
+    // Fondo del sol
+    ctx.save();
+    ctx.translate(centroX, centroY);
+    ctx.rotate(solRotation);
+    ctx.beginPath();
+    ctx.arc(0, 0, 60, 0, 2 * Math.PI);
+    ctx.fillStyle = "radial-gradient(circle, #FFFF00, #FF4500)";
+    ctx.fill();
+    ctx.strokeStyle = "#E0FFFF";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Detalles del sol (estilo prehispánico simplificado)
+    for (let i = 0; i < 8; i++) {
+        const angulo = (i * Math.PI) / 4;
+        ctx.beginPath();
+        ctx.moveTo(30 * Math.cos(angulo), 30 * Math.sin(angulo));
+        ctx.lineTo(50 * Math.cos(angulo), 50 * Math.sin(angulo));
+        ctx.strokeStyle = "#E0FFFF";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+    }
+
+    // Cara del sol (simplificada)
+    ctx.beginPath();
+    ctx.arc(0, 0, 20, 0, 2 * Math.PI);
+    ctx.fillStyle = "#FF4500";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(-10, -5, 5, 0, 2 * Math.PI);
+    ctx.arc(10, -5, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = "#E0FFFF";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, 5, 10, 0, Math.PI);
+    ctx.strokeStyle = "#E0FFFF";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.restore();
 }
 
 function dibujarCalendario() {
@@ -82,20 +152,21 @@ function dibujarCalendario() {
     const numeroHaab = diaHaab <= 360 ? (diaHaab % 20) || 20 : (diaHaab - 360);
 
     // Anillo Haab (externo)
-    dibujarAnillo(ctx, 19, 150, 190, ["#1A3C34", "#2A5D53"], mesesHaab, segmentoHoyHaab, numeroHaab, diasHaab, diaHaab);
-    // Anillo Tzolkin (intermedio)
-    dibujarAnillo(ctx, 20, 110, 150, ["#6D0E10", "#8B1A1C"], nombresTzolkin, segmentoHoyTzolkin, numeroTzolkin, diasTzolkin, diaTzolkin);
+    dibujarAnillo(ctx, 19, 150, 190, ["#2A2A2A", "#3A3A3A"], mesesHaab, segmentoHoyHaab, numeroHaab, diasHaab, diaHaab);
+    // Anillo Tzolkin (intermedio) con números
+    dibujarAnillo(ctx, 20, 110, 150, ["#2A2A2A", "#3A3A3A"], nombresTzolkin, segmentoHoyTzolkin, numeroTzolkin, diasTzolkin, diaTzolkin, true);
     // Anillo Lunar (interno)
-    dibujarAnillo(ctx, 30, 70, 110, ["#13294B", "#1E3F6D"], Array(30).fill("Día"), segmentoHoyLunar, diaLunar, 30, diaLunar);
+    dibujarAnillo(ctx, 30, 70, 110, ["#2A2A2A", "#3A3A3A"], Array(30).fill("Día"), segmentoHoyLunar, diaLunar, 30, diaLunar);
 
-    // Centro
-    ctx.beginPath();
-    ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2, 70, 0, 2 * Math.PI);
-    ctx.fillStyle = "#3d405b";
-    ctx.fill();
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    // Sol central
+    dibujarSol(ctx);
+}
+
+// Animación
+function animar() {
+    solRotation += 0.01; // Rotación lenta del sol
+    dibujarCalendario();
+    requestAnimationFrame(animar);
 }
 
 // Calcular la Posición de "Hoy"
@@ -304,6 +375,7 @@ function alternarModoEducativo() {
     }
 }
 
-// Dibujo Inicial
+// Dibujo Inicial y Animación
 calcularPosicionesHoy();
 dibujarCalendario();
+requestAnimationFrame(animar);
