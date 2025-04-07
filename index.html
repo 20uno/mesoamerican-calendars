@@ -14,19 +14,24 @@
             <div class="calendar" id="tzolkin">
                 <h2>Tzolkin (260 Días)</h2>
                 <canvas id="tzolkinCanvas" width="300" height="300"></canvas>
+                <div class="progress-bar" id="tzolkinProgress"></div>
             </div>
             <div class="calendar" id="haab">
                 <h2>Haab (365 Días)</h2>
                 <canvas id="haabCanvas" width="300" height="300"></canvas>
+                <div class="progress-bar" id="haabProgress"></div>
             </div>
             <div class="calendar" id="lunar">
                 <h2>Ciclo Lunar (29.5 Días)</h2>
                 <canvas id="lunarCanvas" width="300" height="300"></canvas>
+                <div class="progress-bar" id="lunarProgress"></div>
             </div>
         </div>
         <div class="controls">
             <input type="date" id="dateInput" value="2025-04-06" onchange="actualizarCalendarios()">
             <button onclick="avanzarDia()">Siguiente Día</button>
+            <button onclick="avanzarTrecena()">Siguiente Trecena (13 Días)</button>
+            <button onclick="avanzarMesHaab()">Siguiente Mes Haab (20 Días)</button>
             <button onclick="alternarModoEducativo()">Activar/Desactivar Modo Educativo</button>
         </div>
         <div class="info-panel" id="infoPanel"></div>
