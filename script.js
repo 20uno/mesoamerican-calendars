@@ -6,6 +6,13 @@ let haabAngle = 0;
 let solRotation = 0;
 let modoEducativo = false;
 
+// Variables para la animación de transición
+let targetTzolkinAngle = 0;
+let targetHaabAngle = 0;
+let animating = false;
+let animationStartTime = 0;
+const animationDuration = 500; // 500 ms
+
 const nombresTzolkin = ["Imix", "Ik", "Akbal", "Kan", "Chicchan", "Cimi", "Manik", "Lamat", "Muluc", "Oc", "Chuen", "Eb", "Ben", "Ix", "Men", "Cib", "Caban", "Etznab", "Cauac", "Ahau"];
 const mesesHaab = ["Pop", "Wo", "Sip", "Sotz", "Sek", "Xul", "Yaxkin", "Mol", "Chen", "Yax", "Sak", "Keh", "Mak", "Kankin", "Muwan", "Pax", "Kayab", "Kumku", "Wayeb"];
 
@@ -14,6 +21,8 @@ const tzolkinCanvas = document.getElementById("tzolkinCanvas");
 const tzolkinCtx = tzolkinCanvas.getContext("2d");
 const haabCanvas = document.getElementById("haabCanvas");
 const haabCtx = haabCanvas.getContext("2d");
+const connectionCanvas = document.getElementById("connectionCanvas");
+const connectionCtx = connectionCanvas.getContext("2d");
 
 let diaTzolkin, diaHaab;
 let segmentoHoyTzolkinNombre, segmentoHoyTzolkinNumero;
@@ -156,12 +165,59 @@ function dibujarHaab() {
     dibujarSol(haabCtx);
 }
 
-// Animación solo para el sol
-function animarSol() {
+function dibujarLineaConexion() {
+    connectionCtx.clearRect(0, 0, connectionCanvas.width, connectionCanvas.height);
+
+    // Coordenadas del punto "hoy" en el Tzolk'in (lado derecho, 90°)
+    const centroTzolkinX = 200; // Centro del canvas Tzolk'in
+    const centroTzolkinY = 200;
+    const pasoAnguloTzolkin = (2 * Math.PI) / 20;
+    const anguloTzolkinHoy = segmentoHoyTzolkinNombre * pasoAnguloTzolkin + tzolkinAngle;
+    const tzolkinX = centroTzolkinX + 190 * Math.cos(anguloTzolkinHoy);
+    const tzolkinY = centroTzolkinY + 190 * Math.sin(anguloTzolkinHoy);
+
+    // Coordenadas del punto "hoy" en el Haab' (lado izquierdo, 270°)
+    const centroHaabX = 600; // Centro del canvas Haab' (desplazado 400px a la derecha)
+    const centroHaabY = 200;
+    const pasoAnguloHaab = (2 * Math.PI) / 19;
+    const anguloHaabHoy = segmentoHoyHaabMes * pasoAnguloHaab + haabAngle;
+    const haabX = centroHaabX + 190 * Math.cos(anguloHaabHoy);
+    const haabY = centroHaabY + 190 * Math.sin(anguloHaabHoy);
+
+    // Dibujar la línea
+    connectionCtx.beginPath();
+    connectionCtx.moveTo(tzolkinX, tzolkinY);
+    connectionCtx.lineTo(haabX, haabY);
+    connectionCtx.strokeStyle = "#00FF66";
+    connectionCtx.lineWidth = 3;
+    connectionCtx.stroke();
+}
+
+// Animación
+function animar() {
     solRotation += 0.01;
+
+    if (animating) {
+        const currentTime = performance.now();
+        const elapsed = currentTime - animationStartTime;
+        const progress = Math.min(elapsed / animationDuration, 1);
+
+        // Interpolación lineal
+        tzolkinAngle = tzolkinAngle + (targetTzolkinAngle - tzolkinAngle) * progress;
+        haabAngle = haabAngle + (targetHaabAngle - haabAngle) * progress;
+
+        if (progress === 1) {
+            animating = false;
+            tzolkinAngle = targetTzolkinAngle;
+            haabAngle = targetHaabAngle;
+        }
+    }
+
     dibujarTzolkin();
     dibujarHaab();
-    requestAnimationFrame(animarSol);
+    dibujarLineaConexion();
+
+    requestAnimationFrame(animar);
 }
 
 // Calcular el Conteo Largo
@@ -203,16 +259,18 @@ function calcularPosicionesHoy() {
         segmentoHoyHaabMes = 18; // Wayeb
     }
 
-    // Ajustar los ángulos para que los segmentos "hoy" se alineen en el punto de contacto
-    // El Tzolk'in toca al Haab' en su lado derecho (90°, π/2 radianes)
-    // El Haab' toca al Tzolk'in en su lado izquierdo (270°, 3π/2 radianes)
+    // Calcular los ángulos objetivo
     const pasoAnguloTzolkin = (2 * Math.PI) / 20; // 20 segmentos para los nombres del Tzolk'in
     const anguloHoyTzolkin = segmentoHoyTzolkinNombre * pasoAnguloTzolkin;
-    tzolkinAngle = (Math.PI / 2) - anguloHoyTzolkin; // Alineamos "hoy" a 90°
+    targetTzolkinAngle = (Math.PI / 2) - anguloHoyTzolkin; // Alineamos "hoy" a 90°
 
     const pasoAnguloHaab = (2 * Math.PI) / 19; // 19 segmentos para los meses del Haab'
     const anguloHoyHaabMes = segmentoHoyHaabMes * pasoAnguloHaab;
-    haabAngle = (3 * Math.PI / 2) - anguloHoyHaabMes; // Alineamos "hoy" a 270°
+    targetHaabAngle = (3 * Math.PI / 2) - anguloHoyHaabMes; // Alineamos "hoy" a 270°
+
+    // Iniciar la animación
+    animating = true;
+    animationStartTime = performance.now();
 
     // Calcular el resultado de la Rueda Calendárica
     const numeroTzolkin = (diaTzolkin % 13) || 13;
@@ -316,8 +374,6 @@ function avanzarMesHaab() {
 // Entrada de Fecha
 function actualizarCalendarios() {
     calcularPosicionesHoy();
-    dibujarTzolkin();
-    dibujarHaab();
 }
 
 // Alternar Modo Educativo
@@ -329,85 +385,4 @@ function alternarModoEducativo() {
     if (modoEducativo) {
         panelEducativo.innerHTML = `
             <div class="education-column">
-                <h3>Introducción</h3>
-                <p>El calendario mesoamericano unió a todas las culturas de la antigua Mesoamérica. No era un solo calendario, sino una combinación de varios. Era central para la sociedad mesoamericana y ordenaba la vida cotidiana. Comunidades en México y Guatemala aún mantienen el calendario antiguo.</p>
-                <h3>Sistema de Conteo</h3>
-                <p>Los mesoamericanos usaban un sistema de conteo decimal basado en 20, a diferencia del sistema occidental que es base 10. Posible origen del sistema base 20: 10 dedos de las manos + 10 dedos de los pies.</p>
-                <p><b>Representación de Números:</b> Usaban tres símbolos: un punto (1), una barra (5), una concha (0). Ejemplo: 1307 = 3 (400s), 5 (20s), 7 (1s).</p>
-                <h3>Ciclo de 52 Años</h3>
-                <p>El calendario mesoamericano sigue ciclos de 52 años. El final de este ciclo era temido por los aztecas, ya que podría significar la destrucción del quinto Sol si no se honraban a los dioses. Se realizaba la ceremonia del nuevo fuego para asegurar la continuidad de la creación.</p>
-            </div>
-            <div class="education-column">
-                <h3>Calendario Sagrado (Tzolk'in)</h3>
-                <p><b>Duración:</b> 260 días. Conocido como Tzolk’in por los mayas y Tonalpohualli por los aztecas. Se cree que 260 días corresponden a la duración de un embarazo humano.</p>
-                <p><b>Estructura:</b> Combina 13 números (1 al 13) con 20 nombres de días. Ejemplo: 1 Imix, 2 Ik’, 3 Ak’b’al, hasta 13 Ben, luego reinicia a 1 Ix. Total: 260 días.</p>
-                <p><b>Significados:</b></p>
-                <ul>
-                    <li>Imix: Cocodrilo, comienzos.</li>
-                    <li>Ik: Viento, comunicación.</li>
-                    <li>Akbal: Noche, introspección.</li>
-                    <li>Kan: Semilla, potencial.</li>
-                    <li>Chicchan: Serpiente, transformación.</li>
-                    <li>Cimi: Muerte, renacimiento.</li>
-                    <li>Manik: Venado, estabilidad.</li>
-                    <li>Lamat: Conejo, fertilidad.</li>
-                    <li>Muluc: Agua, purificación.</li>
-                    <li>Oc: Perro, lealtad.</li>
-                    <li>Chuen: Mono, creatividad.</li>
-                    <li>Eb: Camino, destino.</li>
-                    <li>Ben: Caña, autoridad.</li>
-                    <li>Ix: Jaguar, magia.</li>
-                    <li>Men: Águila, visión.</li>
-                    <li>Cib: Búho, ancestros.</li>
-                    <li>Caban: Tierra, inteligencia.</li>
-                    <li>Etznab: Pedernal, verdad.</li>
-                    <li>Cauac: Tormenta, renovación.</li>
-                    <li>Ahau: Sol, liderazgo.</li>
-                </ul>
-            </div>
-            <div class="education-column">
-                <h3>Calendario Solar (Haab')</h3>
-                <p><b>Duración:</b> 365 días. Conocido como Haab por los mayas y Tonalpohualli por los aztecas. Compuesto por 18 meses de 20 días más 5 días adicionales (Wayeb).</p>
-                <p><b>Estructura:</b> 18 meses de 20 días (0 a 19) + 5 días de Wayeb (0 a 4). Ejemplo: 0 Pop, 1 Pop, ..., 19 Pop, luego 0 Wo, ..., hasta 0 Wayeb, ..., 4 Wayeb.</p>
-                <p><b>Significados:</b></p>
-                <ul>
-                    <li>Pop: Estera, liderazgo.</li>
-                    <li>Wo: Conjunción negra, reflexión.</li>
-                    <li>Sip: Conjunción roja, caza.</li>
-                    <li>Sotz: Murciélago, secreto.</li>
-                    <li>Sek: Cielo y tierra, calor.</li>
-                    <li>Xul: Perro, finales.</li>
-                    <li>Yaxkin: Sol nuevo, renovación.</li>
-                    <li>Mol: Agua, reunión.</li>
-                    <li>Chen: Tormenta negra, pozo.</li>
-                    <li>Yax: Tormenta verde, fuerza.</li>
-                    <li>Sak: Tormenta blanca, luz.</li>
-                    <li>Keh: Tormenta roja, venado.</li>
-                    <li>Mak: Encerrado, introspección.</li>
-                    <li>Kankin: Sol amarillo, despliegue.</li>
-                    <li>Muwan: Búho, lluvia.</li>
-                    <li>Pax: Siembra, música.</li>
-                    <li>Kayab: Tortuga, cosecha.</li>
-                    <li>Kumku: Granero, maduración.</li>
-                    <li>Wayeb: 5 días desafortunados.</li>
-                </ul>
-            </div>
-            <div class="education-column">
-                <h3>Conteo Largo</h3>
-                <p><b>Propósito:</b> Sistema lineal para registrar fechas históricas. Cuenta los días desde el 14 de agosto de 3114 a.C.</p>
-                <p><b>Estructura:</b> Unidades: Kin (1 día), Winal (20 días), Tun (360 días), K'atun (20 Tun), Baktun (20 K'atun). Formato: Baktun.K'atun.Tun.Winal.Kin.</p>
-                <p><b>Ejemplo:</b> 13.0.12.7.3 (6 abr 2025).</p>
-                <h3>Percepción del Tiempo</h3>
-                <p>Los mesoamericanos veían el tiempo como cíclico. Cada fecha tenía presagios que se repetían cada 52 años.</p>
-                <h3>Conclusión</h3>
-                <p>El calendario mesoamericano es uno de los más impresionantes jamás creados, reflejando una profunda comprensión del tiempo y los ciclos naturales.</p>
-            </div>
-        `;
-    }
-}
-
-// Dibujo Inicial y Animación del Sol
-calcularPosicionesHoy();
-dibujarTzolkin();
-dibujarHaab();
-requestAnimationFrame(animarSol);
+                <h3
