@@ -1,40 +1,44 @@
 // Datos de los Calendarios
 const diasTzolkin = 260;
 const diasHaab = 365;
-const diasLunar = 29.5;
-let anguloActual = 0;
-let modoEducativo = false;
+let tzolkinAngle = 0;
+let haabAngle = 0;
 let solRotation = 0;
 
 const nombresTzolkin = ["Imix", "Ik", "Akbal", "Kan", "Chicchan", "Cimi", "Manik", "Lamat", "Muluc", "Oc", "Chuen", "Eb", "Ben", "Ix", "Men", "Cib", "Caban", "Etznab", "Cauac", "Ahau"];
 const mesesHaab = ["Pop", "Wo", "Sip", "Sotz", "Sek", "Xul", "Yaxkin", "Mol", "Chen", "Yax", "Sak", "Keh", "Mak", "Kankin", "Muwan", "Pax", "Kayab", "Kumku", "Wayeb"];
 
-// Configuración del Canvas
-const calendarCanvas = document.getElementById("calendarCanvas");
-const ctx = calendarCanvas.getContext("2d");
+// Configuración de los Canvas
+const tzolkinCanvas = document.getElementById("tzolkinCanvas");
+const tzolkinCtx = tzolkinCanvas.getContext("2d");
+const haabCanvas = document.getElementById("haabCanvas");
+const haabCtx = haabCanvas.getContext("2d");
 
-let diaTzolkin, diaHaab, diaLunar;
-let segmentoHoyTzolkin, segmentoHoyHaab, segmentoHoyLunar;
+let diaTzolkin, diaHaab;
+let segmentoHoyTzolkinNombre, segmentoHoyTzolkinNumero;
+let segmentoHoyHaabMes, segmentoHoyHaabDia;
 
-function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, etiquetas, segmentoHoy, numeroDia, diasTotales, diaActual, mostrarNumeros = false) {
+function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, etiquetas, segmentoHoy, numeroDia, diasTotales, diaActual, mostrarNumeros = false, rotationAngle) {
     const centroX = ctx.canvas.width / 2;
     const centroY = ctx.canvas.height / 2;
     const pasoAngulo = (2 * Math.PI) / segmentos;
 
     for (let i = 0; i < segmentos; i++) {
-        const anguloInicio = i * pasoAngulo + anguloActual;
-        const anguloFin = (i + 1) * pasoAngulo + anguloActual;
+        const anguloInicio = i * pasoAngulo + rotationAngle;
+        const anguloFin = (i + 1) * pasoAngulo + rotationAngle;
 
-        // Rellenar segmento
+        // Rellenar segmento con transparencia
         ctx.beginPath();
         ctx.arc(centroX, centroY, radioExterior, anguloInicio, anguloFin);
         ctx.arc(centroX, centroY, radioInterior, anguloFin, anguloInicio, true);
         ctx.fillStyle = i % 2 === 0 ? colores[0] : colores[1];
+        ctx.globalAlpha = 0.5; // Transparencia
         ctx.fill();
 
         // Contorno
         ctx.lineWidth = 2;
         ctx.strokeStyle = "#00D4FF";
+        ctx.globalAlpha = 1; // Sin transparencia para los bordes
         ctx.stroke();
 
         // Resaltar "hoy"
@@ -69,7 +73,7 @@ function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, et
 
         // Números (puntos y barras) si aplica
         if (mostrarNumeros) {
-            const numero = (i % 13) + 1;
+            const numero = i + 1;
             const puntos = numero % 5;
             const barras = Math.floor(numero / 5);
             const numeroX = centroX + (radioInterior + 10) * Math.cos(anguloTexto);
@@ -103,7 +107,7 @@ function dibujarSol(ctx) {
     const centroX = ctx.canvas.width / 2;
     const centroY = ctx.canvas.height / 2;
 
-    // Fondo del sol
+    // Fondo del sol con brillo intenso
     ctx.save();
     ctx.translate(centroX, centroY);
     ctx.rotate(solRotation);
@@ -115,57 +119,51 @@ function dibujarSol(ctx) {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Detalles del sol (estilo prehispánico simplificado)
-    for (let i = 0; i < 8; i++) {
-        const angulo = (i * Math.PI) / 4;
-        ctx.beginPath();
-        ctx.moveTo(30 * Math.cos(angulo), 30 * Math.sin(angulo));
-        ctx.lineTo(50 * Math.cos(angulo), 50 * Math.sin(angulo));
-        ctx.strokeStyle = "#E0FFFF";
-        ctx.lineWidth = 3;
-        ctx.stroke();
-    }
-
-    // Cara del sol (simplificada)
+    // Efecto de brillo
+    ctx.globalAlpha = 0.8;
     ctx.beginPath();
-    ctx.arc(0, 0, 20, 0, 2 * Math.PI);
-    ctx.fillStyle = "#FF4500";
+    ctx.arc(0, 0, 70, 0, 2 * Math.PI);
+    ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
     ctx.fill();
-    ctx.beginPath();
-    ctx.arc(-10, -5, 5, 0, 2 * Math.PI);
-    ctx.arc(10, -5, 5, 0, 2 * Math.PI);
-    ctx.fillStyle = "#E0FFFF";
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(0, 5, 10, 0, Math.PI);
-    ctx.strokeStyle = "#E0FFFF";
-    ctx.lineWidth = 2;
-    ctx.stroke();
 
     ctx.restore();
 }
 
-function dibujarCalendario() {
-    ctx.clearRect(0, 0, calendarCanvas.width, calendarCanvas.height);
+function dibujarTzolkin() {
+    tzolkinCtx.clearRect(0, 0, tzolkinCanvas.width, tzolkinCanvas.height);
 
     const numeroTzolkin = (diaTzolkin % 13) || 13;
-    const numeroHaab = diaHaab <= 360 ? (diaHaab % 20) || 20 : (diaHaab - 360);
 
-    // Anillo Haab (externo)
-    dibujarAnillo(ctx, 19, 150, 190, ["#2A2A2A", "#3A3A3A"], mesesHaab, segmentoHoyHaab, numeroHaab, diasHaab, diaHaab);
-    // Anillo Tzolkin (intermedio) con números
-    dibujarAnillo(ctx, 20, 110, 150, ["#2A2A2A", "#3A3A3A"], nombresTzolkin, segmentoHoyTzolkin, numeroTzolkin, diasTzolkin, diaTzolkin, true);
-    // Anillo Lunar (interno)
-    dibujarAnillo(ctx, 30, 70, 110, ["#2A2A2A", "#3A3A3A"], Array(30).fill("Día"), segmentoHoyLunar, diaLunar, 30, diaLunar);
+    // Anillo exterior (nombres)
+    dibujarAnillo(tzolkinCtx, 20, 130, 190, ["rgba(42, 42, 42, 0.5)", "rgba(58, 58, 58, 0.5)"], nombresTzolkin, segmentoHoyTzolkinNombre, numeroTzolkin, diasTzolkin, diaTzolkin, false, tzolkinAngle);
+    // Anillo interior (números 1-13)
+    dibujarAnillo(tzolkinCtx, 13, 70, 130, ["rgba(42, 42, 42, 0.5)", "rgba(58, 58, 58, 0.5)"], Array(13).fill("").map((_, i) => (i + 1).toString()), segmentoHoyTzolkinNumero, null, 13, diaTzolkin % 13 || 13, true, tzolkinAngle * 2);
 
     // Sol central
-    dibujarSol(ctx);
+    dibujarSol(tzolkinCtx);
+}
+
+function dibujarHaab() {
+    haabCtx.clearRect(0, 0, haabCanvas.width, haabCanvas.height);
+
+    const numeroHaab = diaHaab <= 360 ? (diaHaab % 20) || 20 : (diaHaab - 360);
+
+    // Anillo interior (meses)
+    dibujarAnillo(haabCtx, 19, 70, 130, ["rgba(42, 42, 42, 0.5)", "rgba(58, 58, 58, 0.5)"], mesesHaab, segmentoHoyHaabMes, null, diasHaab, diaHaab, false, haabAngle);
+    // Anillo exterior (días 0-19)
+    dibujarAnillo(haabCtx, 20, 130, 190, ["rgba(42, 42, 42, 0.5)", "rgba(58, 58, 58, 0.5)"], Array(20).fill("").map((_, i) => i.toString()), diaHaab % 20, numeroHaab, 20, diaHaab % 20, true, haabAngle / 2);
+
+    // Sol central
+    dibujarSol(haabCtx);
 }
 
 // Animación
 function animar() {
-    solRotation += 0.01; // Rotación lenta del sol
-    dibujarCalendario();
+    solRotation += 0.01; // Rotación del sol
+    tzolkinAngle += 0.005; // Rotación más rápida para Tzolk'in
+    haabAngle += 0.003; // Rotación más lenta para Haab'
+    dibujarTzolkin();
+    dibujarHaab();
     requestAnimationFrame(animar);
 }
 
@@ -180,19 +178,16 @@ function calcularPosicionesHoy() {
     // Tzolkin
     diaTzolkin = (diasDesdeInicioTzolkin % diasTzolkin) || diasTzolkin; // Día 1 a 260
     const cicloTzolkin = diaTzolkin - 1;
-    segmentoHoyTzolkin = cicloTzolkin % 20;
+    segmentoHoyTzolkinNombre = cicloTzolkin % 20;
+    segmentoHoyTzolkinNumero = (diaTzolkin % 13) - 1 || 12;
 
     // Haab
     diaHaab = (diasDesdeInicioHaab % diasHaab) || diasHaab; // Día 1 a 365
     if (diaHaab <= 360) {
-        segmentoHoyHaab = Math.floor((diaHaab - 1) / 20);
+        segmentoHoyHaabMes = Math.floor((diaHaab - 1) / 20);
     } else {
-        segmentoHoyHaab = 18; // Wayeb
+        segmentoHoyHaabMes = 18; // Wayeb
     }
-
-    // Ciclo Lunar
-    diaLunar = (diasDesdeInicioTzolkin % 30) || 30; // Día 1 a 30
-    segmentoHoyLunar = diaLunar - 1;
 
     // Actualizar el panel de información
     const panelInfo = document.getElementById("infoPanel");
@@ -202,55 +197,62 @@ function calcularPosicionesHoy() {
     const longCount = "13.0.12.7.3";
     panelInfo.innerHTML = `
         <h3>Fecha: ${fecha.toLocaleDateString('es-ES')}</h3>
-        <p><b>Tzolkin:</b> ${numeroTzolkin} ${nombresTzolkin[segmentoHoyTzolkin]} (Día ${diaTzolkin}/260)</p>
-        <p><b>Haab:</b> ${numeroHaab} ${mesesHaab[segmentoHoyHaab]} (Día ${diaHaab}/365)</p>
-        <p><b>Ciclo Lunar:</b> Día ${diaLunar}/30</p>
+        <p><b>Tzolk'in:</b> ${numeroTzolkin} ${nombresTzolkin[segmentoHoyTzolkinNombre]} (Día ${diaTzolkin}/260)</p>
+        <p><b>Haab':</b> ${numeroHaab} ${mesesHaab[segmentoHoyHaabMes]} (Día ${diaHaab}/365)</p>
         <p><b>Calendario Largo:</b> ${longCount}</p>
     `;
 }
 
 // Interacción
-function mostrarInfo(calendario, segmento) {
+function mostrarInfo(calendario, segmento, tipo) {
     const panelInfo = document.getElementById("infoPanel");
     panelInfo.style.display = "block";
-    let contenido = `<h3>${calendario}</h3><p><b>Segmento:</b> ${segmento}</p>`;
+    let contenido = `<h3>${calendario}</h3><p><b>${tipo}:</b> ${segmento}</p>`;
 
-    if (calendario === "Tzolkin") {
+    if (calendario === "Tzolk'in") {
         contenido += `
             <p><b>Estructura:</b> 13 números x 20 signos = 260 días.</p>
             <p><b>Significado:</b> Guía espiritual, asociado al embarazo humano.</p>
         `;
-    } else if (calendario === "Haab") {
+    } else if (calendario === "Haab'") {
         contenido += `
             <p><b>Estructura:</b> 18 meses de 20 días + 5 días (Wayeb) = 365 días.</p>
             <p><b>Significado:</b> Ciclos agrícolas, Wayeb es desafortunado.</p>
-        `;
-    } else if (calendario === "Ciclo Lunar") {
-        contenido += `
-            <p><b>Estructura:</b> 29.5 días (simplificado a 30).</p>
-            <p><b>Significado:</b> Influencias lunares y ritmos emocionales.</p>
         `;
     }
 
     panelInfo.innerHTML = contenido;
 }
 
-calendarCanvas.addEventListener("click", (e) => {
-    const rect = calendarCanvas.getBoundingClientRect();
-    const x = e.clientX - rect.left - calendarCanvas.width / 2;
-    const y = e.clientY - rect.top - calendarCanvas.height / 2;
+tzolkinCanvas.addEventListener("click", (e) => {
+    const rect = tzolkinCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left - tzolkinCanvas.width / 2;
+    const y = e.clientY - rect.top - tzolkinCanvas.height / 2;
     const distancia = Math.sqrt(x * x + y * y);
-    const angulo = Math.atan2(y, x) - anguloActual;
+    const angulo = Math.atan2(y, x) - tzolkinAngle;
 
-    if (distancia >= 150 && distancia <= 190) { // Haab
-        const segmento = Math.floor((angulo < 0 ? angulo + 2 * Math.PI : angulo) / (2 * Math.PI / 19));
-        mostrarInfo("Haab", mesesHaab[segmento]);
-    } else if (distancia >= 110 && distancia <= 150) { // Tzolkin
+    if (distancia >= 130 && distancia <= 190) { // Nombres
         const segmento = Math.floor((angulo < 0 ? angulo + 2 * Math.PI : angulo) / (2 * Math.PI / 20));
-        mostrarInfo("Tzolkin", nombresTzolkin[segmento]);
-    } else if (distancia >= 70 && distancia <= 110) { // Ciclo Lunar
-        const segmento = Math.floor((angulo < 0 ? angulo + 2 * Math.PI : angulo) / (2 * Math.PI / 30));
-        mostrarInfo("Ciclo Lunar", `Día ${segmento + 1}`);
+        mostrarInfo("Tzolk'in", nombresTzolkin[segmento], "Nombre del Día");
+    } else if (distancia >= 70 && distancia <= 130) { // Números
+        const segmento = Math.floor((angulo < 0 ? angulo + 2 * Math.PI : angulo) / (2 * Math.PI / 13));
+        mostrarInfo("Tzolk'in", segmento + 1, "Número");
+    }
+});
+
+haabCanvas.addEventListener("click", (e) => {
+    const rect = haabCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left - haabCanvas.width / 2;
+    const y = e.clientY - rect.top - haabCanvas.height / 2;
+    const distancia = Math.sqrt(x * x + y * y);
+    const angulo = Math.atan2(y, x) - haabAngle;
+
+    if (distancia >= 130 && distancia <= 190) { // Días
+        const segmento = Math.floor((angulo < 0 ? angulo + 2 * Math.PI : angulo) / (2 * Math.PI / 20));
+        mostrarInfo("Haab'", segmento, "Día del Mes");
+    } else if (distancia >= 70 && distancia <= 130) { // Meses
+        const segmento = Math.floor((angulo < 0 ? angulo + 2 * Math.PI : angulo) / (2 * Math.PI / 19));
+        mostrarInfo("Haab'", mesesHaab[segmento], "Mes");
     }
 });
 
@@ -260,7 +262,7 @@ function avanzarDia() {
     const fechaActual = new Date(entradaFecha.value);
     fechaActual.setDate(fechaActual.getDate() + 1);
     entradaFecha.value = fechaActual.toISOString().split("T")[0];
-    actualizarCalendario();
+    actualizarCalendarios();
 }
 
 // Avanzar una Trecena (13 días)
@@ -269,7 +271,7 @@ function avanzarTrecena() {
     const fechaActual = new Date(entradaFecha.value);
     fechaActual.setDate(fechaActual.getDate() + 13);
     entradaFecha.value = fechaActual.toISOString().split("T")[0];
-    actualizarCalendario();
+    actualizarCalendarios();
 }
 
 // Avanzar un Mes Haab (20 días)
@@ -278,16 +280,18 @@ function avanzarMesHaab() {
     const fechaActual = new Date(entradaFecha.value);
     fechaActual.setDate(fechaActual.getDate() + 20);
     entradaFecha.value = fechaActual.toISOString().split("T")[0];
-    actualizarCalendario();
+    actualizarCalendarios();
 }
 
 // Entrada de Fecha
-function actualizarCalendario() {
+function actualizarCalendarios() {
     const fecha = new Date(document.getElementById("dateInput").value);
     const diasDesdeEpoca = Math.floor((fecha - new Date("1970-01-01")) / (1000 * 60 * 60 * 24));
-    anguloActual = (diasDesdeEpoca % diasTzolkin) * (2 * Math.PI / diasTzolkin);
+    tzolkinAngle = (diasDesdeEpoca % diasTzolkin) * (2 * Math.PI / diasTzolkin);
+    haabAngle = (diasDesdeEpoca % diasHaab) * (2 * Math.PI / diasHaab);
     calcularPosicionesHoy();
-    dibujarCalendario();
+    dibujarTzolkin();
+    dibujarHaab();
 }
 
 // Alternar Modo Educativo
@@ -307,7 +311,7 @@ function alternarModoEducativo() {
                 <p>El Tzolkin y Haab forman un ciclo de 52 años. Los aztecas temían su fin, realizando la ceremonia del Nuevo Fuego.</p>
             </div>
             <div class="education-column">
-                <h3>Tzolkin (260 Días)</h3>
+                <h3>Tzolk'in (260 Días)</h3>
                 <p><b>Estructura:</b> 13 números x 20 signos = 260 días. Asociado al embarazo humano.</p>
                 <p><b>Relación:</b> No se alinea con el gregoriano. Ejemplo: 5 dic 2023 = 1 Imix (correlación GMT).</p>
                 <p><b>Significados:</b></p>
@@ -335,7 +339,7 @@ function alternarModoEducativo() {
                 </ul>
             </div>
             <div class="education-column">
-                <h3>Haab (365 Días)</h3>
+                <h3>Haab' (365 Días)</h3>
                 <p><b>Estructura:</b> 18 meses de 20 días + 5 días (Wayeb). Ejemplo: 1 Pop, ..., 20 Pop.</p>
                 <p><b>Relación:</b> Cerca del gregoriano, pero sin años bisiestos. Año Nuevo: 2 dic 2024.</p>
                 <p><b>Significados:</b></p>
@@ -362,9 +366,6 @@ function alternarModoEducativo() {
                 </ul>
             </div>
             <div class="education-column">
-                <h3>Ciclo Lunar (29.5 Días)</h3>
-                <p><b>Estructura:</b> Simplificado a 30 días. Representa fases lunares.</p>
-                <p><b>Relación:</b> Alineado con el período sinódico (29.53 días).</p>
                 <h3>Conteo Largo</h3>
                 <p><b>Estructura:</b> Cuenta días desde 14 ago 3114 a.C. Unidades: Kin (1 día), Winal (20 días), Tun (360 días), K'atun (20 Tun), Baktun (20 K'atun).</p>
                 <p><b>Ejemplo:</b> 13.0.12.7.3 (6 abr 2025).</p>
@@ -377,5 +378,6 @@ function alternarModoEducativo() {
 
 // Dibujo Inicial y Animación
 calcularPosicionesHoy();
-dibujarCalendario();
+dibujarTzolkin();
+dibujarHaab();
 requestAnimationFrame(animar);
