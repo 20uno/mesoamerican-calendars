@@ -4,6 +4,7 @@ const diasHaab = 365;
 let tzolkinAngle = 0;
 let haabAngle = 0;
 let solRotation = 0;
+let modoEducativo = false; // Definimos la variable globalmente
 
 const nombresTzolkin = ["Imix", "Ik", "Akbal", "Kan", "Chicchan", "Cimi", "Manik", "Lamat", "Muluc", "Oc", "Chuen", "Eb", "Ben", "Ix", "Men", "Cib", "Caban", "Etznab", "Cauac", "Ahau"];
 const mesesHaab = ["Pop", "Wo", "Sip", "Sotz", "Sek", "Xul", "Yaxkin", "Mol", "Chen", "Yax", "Sak", "Keh", "Mak", "Kankin", "Muwan", "Pax", "Kayab", "Kumku", "Wayeb"];
@@ -73,7 +74,7 @@ function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, et
 
         // Números (puntos y barras) si aplica
         if (mostrarNumeros) {
-            const numero = i + 1;
+            const numero = i + (mostrarNumeros === "haab" ? 0 : 1); // Para Haab, comienza en 0
             const puntos = numero % 5;
             const barras = Math.floor(numero / 5);
             const numeroX = centroX + (radioInterior + 10) * Math.cos(anguloTexto);
@@ -151,20 +152,18 @@ function dibujarHaab() {
     // Anillo interior (meses)
     dibujarAnillo(haabCtx, 19, 70, 130, ["rgba(42, 42, 42, 0.5)", "rgba(58, 58, 58, 0.5)"], mesesHaab, segmentoHoyHaabMes, null, diasHaab, diaHaab, false, haabAngle);
     // Anillo exterior (días 0-19)
-    dibujarAnillo(haabCtx, 20, 130, 190, ["rgba(42, 42, 42, 0.5)", "rgba(58, 58, 58, 0.5)"], Array(20).fill("").map((_, i) => i.toString()), diaHaab % 20, numeroHaab, 20, diaHaab % 20, true, haabAngle / 2);
+    dibujarAnillo(haabCtx, 20, 130, 190, ["rgba(42, 42, 42, 0.5)", "rgba(58, 58, 58, 0.5)"], Array(20).fill("").map((_, i) => i.toString()), diaHaab % 20, numeroHaab, 20, diaHaab % 20, "haab", haabAngle / 2);
 
     // Sol central
     dibujarSol(haabCtx);
 }
 
-// Animación
-function animar() {
+// Animación solo para el sol
+function animarSol() {
     solRotation += 0.01; // Rotación del sol
-    tzolkinAngle += 0.005; // Rotación más rápida para Tzolk'in
-    haabAngle += 0.003; // Rotación más lenta para Haab'
     dibujarTzolkin();
     dibujarHaab();
-    requestAnimationFrame(animar);
+    requestAnimationFrame(animarSol);
 }
 
 // Calcular la Posición de "Hoy"
@@ -188,6 +187,10 @@ function calcularPosicionesHoy() {
     } else {
         segmentoHoyHaabMes = 18; // Wayeb
     }
+
+    // Actualizar los ángulos según la fecha
+    tzolkinAngle = (diasDesdeInicioTzolkin % diasTzolkin) * (2 * Math.PI / diasTzolkin);
+    haabAngle = (diasDesdeInicioHaab % diasHaab) * (2 * Math.PI / diasHaab);
 
     // Actualizar el panel de información
     const panelInfo = document.getElementById("infoPanel");
@@ -285,10 +288,6 @@ function avanzarMesHaab() {
 
 // Entrada de Fecha
 function actualizarCalendarios() {
-    const fecha = new Date(document.getElementById("dateInput").value);
-    const diasDesdeEpoca = Math.floor((fecha - new Date("1970-01-01")) / (1000 * 60 * 60 * 24));
-    tzolkinAngle = (diasDesdeEpoca % diasTzolkin) * (2 * Math.PI / diasTzolkin);
-    haabAngle = (diasDesdeEpoca % diasHaab) * (2 * Math.PI / diasHaab);
     calcularPosicionesHoy();
     dibujarTzolkin();
     dibujarHaab();
@@ -376,8 +375,8 @@ function alternarModoEducativo() {
     }
 }
 
-// Dibujo Inicial y Animación
+// Dibujo Inicial y Animación del Sol
 calcularPosicionesHoy();
 dibujarTzolkin();
 dibujarHaab();
-requestAnimationFrame(animar);
+requestAnimationFrame(animarSol);
