@@ -11,14 +11,14 @@
     <div class="container">
         <h1>Calendario Mesoamericano</h1>
         <div class="calendar-container">
-            <canvas id="calendarCanvas" width="600" height="600"></canvas>
+            <canvas id="calendarCanvas" width="400" height="400"></canvas>
         </div>
         <div class="controls">
             <input type="date" id="dateInput" value="2025-04-06" onchange="actualizarCalendario()">
             <button onclick="avanzarDia()">Siguiente Día</button>
-            <button onclick="avanzarTrecena()">Siguiente Trecena (13 Días)</button>
-            <button onclick="avanzarMesHaab()">Siguiente Mes Haab (20 Días)</button>
-            <button onclick="alternarModoEducativo()">Activar/Desactivar Modo Educativo</button>
+            <button onclick="avanzarTrecena()">Siguiente Trecena</button>
+            <button onclick="avanzarMesHaab()">Siguiente Mes</button>
+            <button onclick="alternarModoEducativo()">Modo Educativo</button>
         </div>
         <div class="info-panel" id="infoPanel"></div>
         <div class="education-panel" id="educationPanel" style="display: none;"></div>
