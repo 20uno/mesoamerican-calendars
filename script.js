@@ -35,192 +35,133 @@ const haabMonths = ["Pop", "Wo", "Sip", "Sotz", "Sek", "Xul", "Yaxkin", "Mol", "
 const bolonSigns = Array(20).fill("Cycle").map((_, i) => `Cycle ${i + 1}`);
 
 // Canvas Setup
-const canvas = document.getElementById("calendarStone");
-const ctx = canvas.getContext("2d");
-let angles = { lunar: 0, tzolkin: 0, haab: 0, bolon: 0 };
-let isDragging = false;
-let previousAngle = 0;
+const tzolkinCanvas = document.getElementById("tzolkinCanvas");
+const haabCanvas = document.getElementById("haabCanvas");
+const lunarCanvas = document.getElementById("lunarCanvas");
+const bolonCanvas = document.getElementById("bolonCanvas");
+const tzolkinCtx = tzolkinCanvas.getContext("2d");
+const haabCtx = haabCanvas.getContext("2d");
+const lunarCtx = lunarCanvas.getContext("2d");
+const bolonCtx = bolonCanvas.getContext("2d");
+
+const tzolkinWrapper = tzolkinCanvas.parentElement;
+const haabWrapper = haabCanvas.parentElement;
+const lunarWrapper = lunarCanvas.parentElement;
+const bolonWrapper = bolonCanvas.parentElement;
+
+let offsets = { lunar: 0, tzolkin: 0, haab: 0, bolon: 0 };
 let highlighted = { ring: null, segment: null };
+let animationFrame;
 
-// Draw Concentric Calendar Stone
-function drawCalendarStone() {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+// Draw Glyph Blocks
+function drawGlyphs(ctx, items, totalItems, offset, colors, type) {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    const blockHeight = 50;
+    const blockWidth = ctx.canvas.width - 20;
+    const visibleHeight = ctx.canvas.height;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Adjust canvas height to fit all items
+    ctx.canvas.height = totalItems * blockHeight;
 
-    // Lunar Cycle (Innermost Ring)
-    drawRing(ctx, 30, 80, 100, ["#13294B", "#1E3F6D"], Array(30).fill("Day"), "lunar", angles.lunar);
+    for (let i = 0; i < totalItems; i++) {
+        const y = i * blockHeight + offset;
 
-    // Tzolkin/Tonalpohualli (Second Ring)
-    drawRing(ctx, 20, 110, 150, ["#6D0E10", "#8B1A1C"], tzolkinSigns, "tzolkin", angles.tzolkin);
-
-    // Haab/Xiuhpohualli (Third Ring)
-    drawRing(ctx, 19, 160, 200, ["#1A3C34", "#2A5D53"], haabMonths, "haab", angles.haab);
-
-    // Bolon Tz'ak'ab (Outermost Ring)
-    drawRing(ctx, 20, 210, 250, ["#4A2C2A", "#6B3E3C"], bolonSigns, "bolon", angles.bolon);
-
-    // Central Stone Detail
-    const centerGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 70);
-    centerGradient.addColorStop(0, "#D9C2A3");
-    centerGradient.addColorStop(1, "#BFA98A");
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 70, 0, 2 * Math.PI);
-    ctx.fillStyle = centerGradient;
-    ctx.fill();
-    ctx.strokeStyle = "#2A2A2A";
-    ctx.lineWidth = 4;
-    ctx.stroke();
-}
-
-function drawRing(ctx, segments, innerRadius, outerRadius, colors, labels, ringType, angle) {
-    const centerX = ctx.canvas.width / 2;
-    const centerY = ctx.canvas.height / 2;
-    const angleStep = (2 * Math.PI) / segments;
-
-    for (let i = 0; i < segments; i++) {
-        const startAngle = i * angleStep + angle;
-        const endAngle = (i + 1) * angleStep + angle;
+        // Only draw visible blocks
+        if (y + blockHeight < 0 || y > visibleHeight) continue;
 
         // Gradient for carved-stone effect
-        const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius);
+        const gradient = ctx.createLinearGradient(0, y, 0, y + blockHeight);
         gradient.addColorStop(0, i % 2 === 0 ? colors[0] : colors[1]);
         gradient.addColorStop(1, i % 2 === 0 ? colors[1] : colors[0]);
 
-        // Fill segment
+        // Draw block
         ctx.beginPath();
-        ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
-        ctx.arc(centerX, centerY, innerRadius, endAngle, startAngle, true);
+        ctx.rect(10, y, blockWidth, blockHeight - 5);
         ctx.fillStyle = gradient;
         ctx.fill();
 
         // Highlight if selected
-        if (highlighted.ring === ringType && highlighted.segment === i) {
+        if (highlighted.ring === type && highlighted.segment === i) {
             ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
             ctx.fill();
         }
 
         // Outline
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 2;
         ctx.strokeStyle = "#2A2A2A";
         ctx.stroke();
         ctx.closePath();
 
         // Label
-        const textAngle = startAngle + angleStep / 2;
-        const textRadius = (innerRadius + outerRadius) / 2;
-        const textX = centerX + textRadius * Math.cos(textAngle);
-        const textY = centerY + textRadius * Math.sin(textAngle);
-
-        ctx.save();
-        ctx.translate(textX, textY);
-        ctx.rotate(textAngle + Math.PI / 2);
-        ctx.font = "bold 12px Arial";
+        ctx.font = "bold 14px Arial";
         ctx.fillStyle = "#F5E6CC";
         ctx.strokeStyle = "#2A2A2A";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         ctx.textAlign = "center";
-        const label = ringType === "tzolkin" ? `${labels[i % labels.length].mayan}/${labels[i % labels.length].nahuatl}` : labels[i % labels.length];
-        ctx.strokeText(label, 0, 0);
-        ctx.fillText(label, 0, 0);
-        ctx.restore();
+        const label = type === "tzolkin" ? `${items[i % items.length].mayan}/${items[i % items.length].nahuatl}` : items[i % items.length];
+        ctx.strokeText(label, blockWidth / 2 + 10, y + blockHeight / 2 + 5);
+        ctx.fillText(label, blockWidth / 2 + 10, y + blockHeight / 2 + 5);
     }
 }
 
-// Interaction: Drag to Rotate
-canvas.addEventListener("mousedown", (e) => {
-    isDragging = true;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left - canvas.width / 2;
-    const y = e.clientY - rect.top - canvas.height / 2;
-    previousAngle = Math.atan2(y, x);
-});
+function drawAllGlyphs() {
+    drawGlyphs(lunarCtx, Array(30).fill("Day"), 30, offsets.lunar, ["#13294B", "#1E3F6D"], "lunar");
+    drawGlyphs(tzolkinCtx, tzolkinSigns, tzolkinDays, offsets.tzolkin, ["#6D0E10", "#8B1A1C"], "tzolkin");
+    drawGlyphs(haabCtx, haabMonths, haabDays, offsets.haab, ["#1A3C34", "#2A5D53"], "haab");
+    drawGlyphs(bolonCtx, bolonSigns, bolonDays, offsets.bolon, ["#4A2C2A", "#6B3E3C"], "bolon");
+}
 
-canvas.addEventListener("mousemove", (e) => {
-    if (!isDragging) {
-        // Hover Highlight
+// Scroll Handling
+function addScrollListener(wrapper, offsetKey, totalItems) {
+    wrapper.addEventListener("scroll", () => {
+        const blockHeight = 50;
+        const scrollTop = wrapper.scrollTop;
+        offsets[offsetKey] = -scrollTop;
+        drawAllGlyphs();
+    });
+}
+
+addScrollListener(lunarWrapper, "lunar", 30);
+addScrollListener(tzolkinWrapper, "tzolkin", tzolkinDays);
+addScrollListener(haabWrapper, "haab", haabDays);
+addScrollListener(bolonWrapper, "bolon", bolonDays);
+
+// Click and Hover Handling
+function addInteractionListener(canvas, wrapper, items, totalItems, type) {
+    canvas.addEventListener("mousemove", (e) => {
         const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left - canvas.width / 2;
-        const y = e.clientY - rect.top - canvas.height / 2;
-        const distance = Math.sqrt(x * x + y * y);
-        const angle = Math.atan2(y, x);
+        const y = e.clientY - rect.top + wrapper.scrollTop;
+        const blockHeight = 50;
+        const segment = Math.floor(y / blockHeight);
 
-        highlighted = { ring: null, segment: null };
-        if (distance >= 80 && distance < 100) { // Lunar
-            const segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle - angles.lunar) / (2 * Math.PI / 30));
-            highlighted = { ring: "lunar", segment };
-        } else if (distance >= 110 && distance < 150) { // Tzolkin
-            const segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle - angles.tzolkin) / (2 * Math.PI / 20));
-            highlighted = { ring: "tzolkin", segment };
-        } else if (distance >= 160 && distance < 200) { // Haab
-            const segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle - angles.haab) / (2 * Math.PI / 19));
-            highlighted = { ring: "haab", segment };
-        } else if (distance >= 210 && distance < 250) { // Bolon
-            const segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle - angles.bolon) / (2 * Math.PI / 20));
-            highlighted = { ring: "bolon", segment };
+        if (segment >= 0 && segment < totalItems) {
+            highlighted = { ring: type, segment };
+            drawAllGlyphs();
         }
-        drawCalendarStone();
-    } else {
-        // Dragging
+    });
+
+    canvas.addEventListener("mouseleave", () => {
+        highlighted = { ring: null, segment: null };
+        drawAllGlyphs();
+    });
+
+    canvas.addEventListener("click", (e) => {
         const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left - canvas.width / 2;
-        const y = e.clientY - rect.top - canvas.height / 2;
-        const currentAngle = Math.atan2(y, x);
-        const deltaAngle = currentAngle - previousAngle;
+        const y = e.clientY - rect.top + wrapper.scrollTop;
+        const blockHeight = 50;
+        const segment = Math.floor(y / blockHeight);
 
-        // Rotate all rings proportionally
-        angles.lunar += deltaAngle * (lunarDays / lunarDays);
-        angles.tzolkin += deltaAngle * (tzolkinDays / lunarDays);
-        angles.haab += deltaAngle * (haabDays / lunarDays);
-        angles.bolon += deltaAngle * (bolonDays / lunarDays);
+        if (segment >= 0 && segment < totalItems) {
+            const label = type === "tzolkin" ? `${items[segment % items.length].mayan}/${items[segment % items.length].nahuatl}` : items[segment % items.length];
+            showInfo(type === "tzolkin" ? "Tzolkin/Tonalpohualli" : type === "haab" ? "Haab/Xiuhpohualli" : type === "lunar" ? "Lunar Cycle" : "Bolon Tz'ak'ab", label);
+        }
+    });
+}
 
-        previousAngle = currentAngle;
-        drawCalendarStone();
-    }
-});
-
-canvas.addEventListener("mouseup", () => {
-    isDragging = false;
-});
-
-canvas.addEventListener("mouseleave", () => {
-    isDragging = false;
-    highlighted = { ring: null, segment: null };
-    drawCalendarStone();
-});
-
-// Click to Show Info
-canvas.addEventListener("click", (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left - canvas.width / 2;
-    const y = e.clientY - rect.top - canvas.height / 2;
-    const distance = Math.sqrt(x * x + y * y);
-    const angle = Math.atan2(y, x);
-
-    let ring, segment, label;
-    if (distance >= 80 && distance < 100) { // Lunar
-        segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle - angles.lunar) / (2 * Math.PI / 30));
-        ring = "Lunar Cycle";
-        label = `Day ${segment + 1}`;
-    } else if (distance >= 110 && distance < 150) { // Tzolkin
-        segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle - angles.tzolkin) / (2 * Math.PI / 20));
-        ring = "Tzolkin/Tonalpohualli";
-        label = `${tzolkinSigns[segment].mayan}/${tzolkinSigns[segment].nahuatl}`;
-    } else if (distance >= 160 && distance < 200) { // Haab
-        segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle - angles.haab) / (2 * Math.PI / 19));
-        ring = "Haab/Xiuhpohualli";
-        label = haabMonths[segment];
-    } else if (distance >= 210 && distance < 250) { // Bolon
-        segment = Math.floor((angle < 0 ? angle + 2 * Math.PI : angle - angles.bolon) / (2 * Math.PI / 20));
-        ring = "Bolon Tz'ak'ab";
-        label = bolonSigns[segment];
-    } else {
-        return;
-    }
-
-    showInfo(ring, label);
-});
+addInteractionListener(lunarCanvas, lunarWrapper, Array(30).fill("Day"), 30, "lunar");
+addInteractionListener(tzolkinCanvas, tzolkinWrapper, tzolkinSigns, tzolkinDays, "tzolkin");
+addInteractionListener(haabCanvas, haabWrapper, haabMonths, haabDays, "haab");
+addInteractionListener(bolonCanvas, bolonWrapper, bolonSigns, bolonDays, "bolon");
 
 // Show Info with Cultural Context
 function showInfo(ring, label) {
@@ -261,60 +202,46 @@ function alignCalendars() {
     const cycleStart = new Date("2023-12-05");
     const daysSinceCycleStart = Math.floor((date - cycleStart) / (1000 * 60 * 60 * 24));
 
-    // Calculate positions
-    const lunarPos = (daysSinceCycleStart % lunarDays) * (2 * Math.PI / lunarDays);
-    const tzolkinPos = (daysSinceCycleStart % tzolkinDays) * (2 * Math.PI / tzolkinDays);
-    const haabPos = (daysSinceCycleStart % haabDays) * (2 * Math.PI / haabDays);
-    const bolonPos = (daysSinceCycleStart % bolonDays) * (2 * Math.PI / bolonDays);
+    const blockHeight = 50;
+    const lunarPos = (daysSinceCycleStart % 30) * blockHeight;
+    const tzolkinPos = (daysSinceCycleStart % tzolkinDays) * blockHeight;
+    const haabPos = (daysSinceCycleStart % haabDays) * blockHeight;
+    const bolonPos = (daysSinceCycleStart % bolonDays) * blockHeight;
 
-    // Smooth animation to new positions
-    const duration = 1000; // 1 second
-    const startTime = performance.now();
-    const startAngles = { ...angles };
-
-    function animate(time) {
-        const elapsed = time - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-
-        angles.lunar = startAngles.lunar + (lunarPos - startAngles.lunar) * progress;
-        angles.tzolkin = startAngles.tzolkin + (tzolkinPos - startAngles.tzolkin) * progress;
-        angles.haab = startAngles.haab + (haabPos - startAngles.haab) * progress;
-        angles.bolon = startAngles.bolon + (bolonPos - startAngles.bolon) * progress;
-
-        drawCalendarStone();
-
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        }
-    }
-
-    requestAnimationFrame(animate);
+    // Smooth scroll to positions
+    lunarWrapper.scrollTo({ top: lunarPos, behavior: "smooth" });
+    tzolkinWrapper.scrollTo({ top: tzolkinPos, behavior: "smooth" });
+    haabWrapper.scrollTo({ top: haabPos, behavior: "smooth" });
+    bolonWrapper.scrollTo({ top: bolonPos, behavior: "smooth" });
 }
 
-// Reset View
-function resetView() {
-    const duration = 1000;
-    const startTime = performance.now();
-    const startAngles = { ...angles };
+// Play Animation
+function playAnimation() {
+    let days = 0;
+    function animate() {
+        days++;
+        const blockHeight = 50;
+        const lunarPos = (days % 30) * blockHeight;
+        const tzolkinPos = (days % tzolkinDays) * blockHeight;
+        const haabPos = (days % haabDays) * blockHeight;
+        const bolonPos = (days % bolonDays) * blockHeight;
 
-    function animate(time) {
-        const elapsed = time - startTime;
-        const progress = Math.min(elapsed / duration, 1);
+        lunarWrapper.scrollTop = lunarPos;
+        tzolkinWrapper.scrollTop = tzolkinPos;
+        haabWrapper.scrollTop = haabPos;
+        bolonWrapper.scrollTop = bolonPos;
 
-        angles.lunar = startAngles.lunar + (0 - startAngles.lunar) * progress;
-        angles.tzolkin = startAngles.tzolkin + (0 - startAngles.tzolkin) * progress;
-        angles.haab = startAngles.haab + (0 - startAngles.haab) * progress;
-        angles.bolon = startAngles.bolon + (0 - startAngles.bolon) * progress;
-
-        drawCalendarStone();
-
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        }
+        animationFrame = requestAnimationFrame(animate);
     }
+    animationFrame = requestAnimationFrame(animate);
+}
 
-    requestAnimationFrame(animate);
+// Stop Animation
+function stopAnimation() {
+    if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+    }
 }
 
 // Initial Draw
-drawCalendarStone();
+drawAllGlyphs();
