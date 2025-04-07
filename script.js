@@ -4,7 +4,7 @@ const diasHaab = 365;
 let tzolkinAngle = 0;
 let haabAngle = 0;
 let solRotation = 0;
-let modoEducativo = false; // Definimos la variable globalmente
+let modoEducativo = false;
 
 const nombresTzolkin = ["Imix", "Ik", "Akbal", "Kan", "Chicchan", "Cimi", "Manik", "Lamat", "Muluc", "Oc", "Chuen", "Eb", "Ben", "Ix", "Men", "Cib", "Caban", "Etznab", "Cauac", "Ahau"];
 const mesesHaab = ["Pop", "Wo", "Sip", "Sotz", "Sek", "Xul", "Yaxkin", "Mol", "Chen", "Yax", "Sak", "Keh", "Mak", "Kankin", "Muwan", "Pax", "Kayab", "Kumku", "Wayeb"];
@@ -33,13 +33,13 @@ function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, et
         ctx.arc(centroX, centroY, radioExterior, anguloInicio, anguloFin);
         ctx.arc(centroX, centroY, radioInterior, anguloFin, anguloInicio, true);
         ctx.fillStyle = i % 2 === 0 ? colores[0] : colores[1];
-        ctx.globalAlpha = 0.5; // Transparencia
+        ctx.globalAlpha = 0.5;
         ctx.fill();
 
         // Contorno
         ctx.lineWidth = 2;
         ctx.strokeStyle = "#00D4FF";
-        ctx.globalAlpha = 1; // Sin transparencia para los bordes
+        ctx.globalAlpha = 1;
         ctx.stroke();
 
         // Resaltar "hoy"
@@ -74,7 +74,7 @@ function dibujarAnillo(ctx, segmentos, radioInterior, radioExterior, colores, et
 
         // Números (puntos y barras) si aplica
         if (mostrarNumeros) {
-            const numero = i + (mostrarNumeros === "haab" ? 0 : 1); // Para Haab, comienza en 0
+            const numero = i + (mostrarNumeros === "haab" ? 0 : 1);
             const puntos = numero % 5;
             const barras = Math.floor(numero / 5);
             const numeroX = centroX + (radioInterior + 10) * Math.cos(anguloTexto);
@@ -108,7 +108,6 @@ function dibujarSol(ctx) {
     const centroX = ctx.canvas.width / 2;
     const centroY = ctx.canvas.height / 2;
 
-    // Fondo del sol con brillo intenso
     ctx.save();
     ctx.translate(centroX, centroY);
     ctx.rotate(solRotation);
@@ -120,7 +119,6 @@ function dibujarSol(ctx) {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Efecto de brillo
     ctx.globalAlpha = 0.8;
     ctx.beginPath();
     ctx.arc(0, 0, 70, 0, 2 * Math.PI);
@@ -160,13 +158,13 @@ function dibujarHaab() {
 
 // Animación solo para el sol
 function animarSol() {
-    solRotation += 0.01; // Rotación del sol
+    solRotation += 0.01;
     dibujarTzolkin();
     dibujarHaab();
     requestAnimationFrame(animarSol);
 }
 
-// Calcular la Posición de "Hoy"
+// Calcular la Posición de "Hoy" y Mostrar el Resultado
 function calcularPosicionesHoy() {
     const fecha = new Date(document.getElementById("dateInput").value);
     const inicioCicloTzolkin = new Date("2023-12-05"); // Inicio del ciclo Tzolkin (1 Imix)
@@ -175,13 +173,13 @@ function calcularPosicionesHoy() {
     const diasDesdeInicioHaab = Math.floor((fecha - inicioCicloHaab) / (1000 * 60 * 60 * 24));
 
     // Tzolkin
-    diaTzolkin = (diasDesdeInicioTzolkin % diasTzolkin) || diasTzolkin; // Día 1 a 260
+    diaTzolkin = (diasDesdeInicioTzolkin % diasTzolkin) || diasTzolkin;
     const cicloTzolkin = diaTzolkin - 1;
     segmentoHoyTzolkinNombre = cicloTzolkin % 20;
     segmentoHoyTzolkinNumero = (diaTzolkin % 13) - 1 || 12;
 
     // Haab
-    diaHaab = (diasDesdeInicioHaab % diasHaab) || diasHaab; // Día 1 a 365
+    diaHaab = (diasDesdeInicioHaab % diasHaab) || diasHaab;
     if (diaHaab <= 360) {
         segmentoHoyHaabMes = Math.floor((diaHaab - 1) / 20);
     } else {
@@ -192,17 +190,29 @@ function calcularPosicionesHoy() {
     tzolkinAngle = (diasDesdeInicioTzolkin % diasTzolkin) * (2 * Math.PI / diasTzolkin);
     haabAngle = (diasDesdeInicioHaab % diasHaab) * (2 * Math.PI / diasHaab);
 
+    // Calcular el resultado de la Rueda Calendárica
+    const numeroTzolkin = (diaTzolkin % 13) || 13;
+    const nombreTzolkin = nombresTzolkin[segmentoHoyTzolkinNombre];
+    const numeroHaab = diaHaab <= 360 ? (diaHaab % 20) || 20 : (diaHaab - 360);
+    const mesHaab = mesesHaab[segmentoHoyHaabMes];
+    const longCount = "13.0.12.7.3"; // Ejemplo fijo para la fecha actual
+
+    // Mostrar el resultado en el centro
+    const calendarResult = document.getElementById("calendarResult");
+    calendarResult.innerHTML = `
+        <p><b>Fecha:</b> ${fecha.toLocaleDateString('es-ES')}</p>
+        <p><b>Rueda Calendárica:</b> ${numeroTzolkin} ${nombreTzolkin} ${numeroHaab} ${mesHaab}</p>
+        <p><b>Conteo Largo:</b> ${longCount}</p>
+    `;
+
     // Actualizar el panel de información
     const panelInfo = document.getElementById("infoPanel");
     panelInfo.style.display = "block";
-    const numeroTzolkin = (diaTzolkin % 13) || 13;
-    const numeroHaab = diaHaab <= 360 ? (diaHaab % 20) || 20 : (diaHaab - 360);
-    const longCount = "13.0.12.7.3";
     panelInfo.innerHTML = `
         <h3>Fecha: ${fecha.toLocaleDateString('es-ES')}</h3>
-        <p><b>Tzolk'in:</b> ${numeroTzolkin} ${nombresTzolkin[segmentoHoyTzolkinNombre]} (Día ${diaTzolkin}/260)</p>
-        <p><b>Haab':</b> ${numeroHaab} ${mesesHaab[segmentoHoyHaabMes]} (Día ${diaHaab}/365)</p>
-        <p><b>Calendario Largo:</b> ${longCount}</p>
+        <p><b>Tzolk'in:</b> ${numeroTzolkin} ${nombreTzolkin} (Día ${diaTzolkin}/260)</p>
+        <p><b>Haab':</b> ${numeroHaab} ${mesHaab} (Día ${diaHaab}/365)</p>
+        <p><b>Conteo Largo:</b> ${longCount}</p>
     `;
 }
 
@@ -303,16 +313,17 @@ function alternarModoEducativo() {
         panelEducativo.innerHTML = `
             <div class="education-column">
                 <h3>Introducción</h3>
-                <p>El calendario mesoamericano unió a culturas como mayas y aztecas, ordenando la vida cotidiana. Aún se usa en México y Guatemala.</p>
+                <p>El calendario mesoamericano unió a todas las culturas de la antigua Mesoamérica. No era un solo calendario, sino una combinación de varios. Era central para la sociedad mesoamericana y ordenaba la vida cotidiana. Comunidades en México y Guatemala aún mantienen el calendario antiguo.</p>
                 <h3>Sistema de Conteo</h3>
-                <p>Base 20 (dedos de manos y pies). Símbolos: punto (1), barra (5), concha (0). Ejemplo: 1307 = 3 (400s), 5 (20s), 7 (1s).</p>
+                <p>Los mesoamericanos usaban un sistema de conteo decimal basado en 20, a diferencia del sistema occidental que es base 10. Posible origen del sistema base 20: 10 dedos de las manos + 10 dedos de los pies.</p>
+                <p><b>Representación de Números:</b> Usaban tres símbolos: un punto (1), una barra (5), una concha (0). Ejemplo: 1307 = 3 (400s), 5 (20s), 7 (1s).</p>
                 <h3>Ciclo de 52 Años</h3>
-                <p>El Tzolkin y Haab forman un ciclo de 52 años. Los aztecas temían su fin, realizando la ceremonia del Nuevo Fuego.</p>
+                <p>El calendario mesoamericano sigue ciclos de 52 años. El final de este ciclo era temido por los aztecas, ya que podría significar la destrucción del quinto Sol si no se honraban a los dioses. Se realizaba la ceremonia del nuevo fuego para asegurar la continuidad de la creación.</p>
             </div>
             <div class="education-column">
-                <h3>Tzolk'in (260 Días)</h3>
-                <p><b>Estructura:</b> 13 números x 20 signos = 260 días. Asociado al embarazo humano.</p>
-                <p><b>Relación:</b> No se alinea con el gregoriano. Ejemplo: 5 dic 2023 = 1 Imix (correlación GMT).</p>
+                <h3>Calendario Sagrado (Tzolk'in)</h3>
+                <p><b>Duración:</b> 260 días. Conocido como Tzolk’in por los mayas y Tonalpohualli por los aztecas. Se cree que 260 días corresponden a la duración de un embarazo humano.</p>
+                <p><b>Estructura:</b> Compuesto por 13 meses de 20 días cada uno. Cada día tiene asociaciones y presagios específicos. Ejemplo: 1 Imix, 2 Ik’, 3 Ak’b’al, hasta 13 Ben, luego reinicia a 1 Ik’.</p>
                 <p><b>Significados:</b></p>
                 <ul>
                     <li>Imix: Cocodrilo, comienzos.</li>
@@ -338,9 +349,9 @@ function alternarModoEducativo() {
                 </ul>
             </div>
             <div class="education-column">
-                <h3>Haab' (365 Días)</h3>
-                <p><b>Estructura:</b> 18 meses de 20 días + 5 días (Wayeb). Ejemplo: 1 Pop, ..., 20 Pop.</p>
-                <p><b>Relación:</b> Cerca del gregoriano, pero sin años bisiestos. Año Nuevo: 2 dic 2024.</p>
+                <h3>Calendario Solar (Haab')</h3>
+                <p><b>Duración:</b> 365 días. Conocido como Haab por los mayas y Tonalpohualli por los aztecas. Compuesto por 18 meses de 20 días más 5 días adicionales considerados desafortunados (Wayeb).</p>
+                <p><b>Estructura:</b> Cada mes tiene una forma consistente de numerar los días. Ejemplo: 1 Pop, 2 Pop, 3 Pop, hasta 20 Pop, luego pasa al siguiente mes.</p>
                 <p><b>Significados:</b></p>
                 <ul>
                     <li>Pop: Estera, liderazgo.</li>
@@ -366,10 +377,13 @@ function alternarModoEducativo() {
             </div>
             <div class="education-column">
                 <h3>Conteo Largo</h3>
-                <p><b>Estructura:</b> Cuenta días desde 14 ago 3114 a.C. Unidades: Kin (1 día), Winal (20 días), Tun (360 días), K'atun (20 Tun), Baktun (20 K'atun).</p>
+                <p><b>Propósito:</b> Para resolver la ambigüedad en la datación histórica, se creó el Conteo Largo. Permite anclar fechas a eventos históricos específicos mediante un conteo lineal de días. Los mayas fueron los principales usuarios.</p>
+                <p><b>Estructura:</b> Cuenta los días desde el 14 de agosto de 3114 a.C. Unidades: Kin (1 día), Winal (20 días), Tun (360 días), K'atun (20 Tun), Baktun (20 K'atun).</p>
                 <p><b>Ejemplo:</b> 13.0.12.7.3 (6 abr 2025).</p>
                 <h3>Percepción del Tiempo</h3>
-                <p>Los mesoamericanos veían el tiempo como cíclico, con presagios que se repetían.</p>
+                <p>A diferencia de la visión lineal del tiempo en culturas occidentales, los mesoamericanos veían el tiempo como un ciclo. Cada fecha tenía sus propios presagios, que se repetían.</p>
+                <h3>Conclusión</h3>
+                <p>El calendario mesoamericano es considerado uno de los más impresionantes jamás creados. Su complejidad refleja una profunda comprensión del tiempo y los ciclos naturales.</p>
             </div>
         `;
     }
