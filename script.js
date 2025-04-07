@@ -17,8 +17,9 @@ const haabCtx = haabCanvas.getContext("2d");
 const lunarCtx = lunarCanvas.getContext("2d");
 
 let segmentoHoyTzolkin, segmentoHoyHaab, segmentoHoyLunar;
+let diaTzolkin, diaHaab, diaLunar;
 
-function dibujarRueda(ctx, segmentos, radio, colores, etiquetas, segmentoHoy) {
+function dibujarRueda(ctx, segmentos, radio, colores, etiquetas, segmentoHoy, numeroDia) {
     const centroX = ctx.canvas.width / 2;
     const centroY = ctx.canvas.height / 2;
     const pasoAngulo = (2 * Math.PI) / segmentos;
@@ -60,8 +61,12 @@ function dibujarRueda(ctx, segmentos, radio, colores, etiquetas, segmentoHoy) {
         ctx.strokeStyle = "#000";
         ctx.lineWidth = 2;
         ctx.textAlign = "center";
-        ctx.strokeText(etiquetas[i % etiquetas.length], 0, 0);
-        ctx.fillText(etiquetas[i % etiquetas.length], 0, 0);
+        let etiqueta = etiquetas[i % etiquetas.length];
+        if (i === segmentoHoy && numeroDia) {
+            etiqueta = `${numeroDia} ${etiqueta}`;
+        }
+        ctx.strokeText(etiqueta, 0, 0);
+        ctx.fillText(etiqueta, 0, 0);
         ctx.restore();
     }
 
@@ -80,29 +85,56 @@ function dibujarCalendarios() {
     haabCtx.clearRect(0, 0, haabCanvas.width, haabCanvas.height);
     lunarCtx.clearRect(0, 0, lunarCanvas.width, lunarCanvas.height);
 
-    dibujarRueda(tzolkinCtx, 20, 130, ["#6D0E10", "#8B1A1C"], nombresTzolkin, segmentoHoyTzolkin);
-    dibujarRueda(haabCtx, 19, 130, ["#1A3C34", "#2A5D53"], mesesHaab, segmentoHoyHaab);
-    dibujarRueda(lunarCtx, 30, 130, ["#13294B", "#1E3F6D"], Array(30).fill("Día"), segmentoHoyLunar);
+    const numeroTzolkin = (diaTzolkin % 13) || 13; // Número del 1 al 13
+    const numeroHaab = diaHaab <= 360 ? (diaHaab % 20) || 20 : (diaHaab - 360); // Día del mes (1-20, o 1-5 para Wayeb)
+
+    dibujarRueda(tzolkinCtx, 20, 130, ["#6D0E10", "#8B1A1C"], nombresTzolkin, segmentoHoyTzolkin, numeroTzolkin);
+    dibujarRueda(haabCtx, 19, 130, ["#1A3C34", "#2A5D53"], mesesHaab, segmentoHoyHaab, numeroHaab);
+    dibujarRueda(lunarCtx, 30, 130, ["#13294B", "#1E3F6D"], Array(30).fill("Día"), segmentoHoyLunar, diaLunar);
+
+    // Actualizar barras de progreso
+    document.getElementById("tzolkinProgress").innerHTML = `<div style="width: ${(diaTzolkin / diasTzolkin) * 100}%"></div>`;
+    document.getElementById("haabProgress").innerHTML = `<div style="width: ${(diaHaab / diasHaab) * 100}%"></div>`;
+    document.getElementById("lunarProgress").innerHTML = `<div style="width: ${(diaLunar / 30) * 100}%"></div>`;
 }
 
 // Calcular la Posición de "Hoy"
 function calcularPosicionesHoy() {
     const fecha = new Date(document.getElementById("dateInput").value);
-    const inicioCiclo = new Date("2023-12-05"); // Inicio del ciclo Tzolkin
-    const diasDesdeInicioCiclo = Math.floor((fecha - inicioCiclo) / (1000 * 60 * 60 * 24));
+    const inicioCicloTzolkin = new Date("2023-12-05"); // Inicio del ciclo Tzolkin
+    const inicioCicloHaab = new Date("2024-03-30"); // Año Nuevo Haab
+    const diasDesdeInicioTzolkin = Math.floor((fecha - inicioCicloTzolkin) / (1000 * 60 * 60 * 24));
+    const diasDesdeInicioHaab = Math.floor((fecha - inicioCicloHaab) / (1000 * 60 * 60 * 24));
 
-    segmentoHoyTzolkin = Math.floor((diasDesdeInicioCiclo % diasTzolkin) / (diasTzolkin / 20));
-    segmentoHoyHaab = Math.floor((diasDesdeInicioCiclo % diasHaab) / (diasHaab / 19));
-    segmentoHoyLunar = Math.floor((diasDesdeInicioCiclo % 30) / (30 / 30));
+    // Tzolkin
+    diaTzolkin = (diasDesdeInicioTzolkin % diasTzolkin) || diasTzolkin; // Día 1 a 260
+    const cicloTzolkin = Math.floor((diaTzolkin - 1) / 13); // Cada 13 días cambia el signo
+    segmentoHoyTzolkin = cicloTzolkin % 20; // Signo actual (0-19)
+
+    // Haab (Corrección: 20 días por mes)
+    diaHaab = (diasDesdeInicioHaab % diasHaab) || diasHaab; // Día 1 a 365
+    if (diaHaab <= 360) {
+        segmentoHoyHaab = Math.floor((diaHaab - 1) / 20); // Mes actual (0-17)
+    } else {
+        segmentoHoyHaab = 18; // Wayeb
+    }
+
+    // Ciclo Lunar
+    diaLunar = (diasDesdeInicioTzolkin % 30) || 30; // Día 1 a 30
+    segmentoHoyLunar = diaLunar - 1;
 
     // Actualizar el panel de información con la fecha de hoy
     const panelInfo = document.getElementById("infoPanel");
     panelInfo.style.display = "block";
+    const numeroTzolkin = (diaTzolkin % 13) || 13;
+    const numeroHaab = diaHaab <= 360 ? (diaHaab % 20) || 20 : (diaHaab - 360);
+    const longCount = "13.0.12.7.3"; // Aproximación basada en la correlación GMT
     panelInfo.innerHTML = `
         <h3>Fecha Actual: ${fecha.toLocaleDateString('es-ES')}</h3>
-        <p><b>Tzolkin:</b> ${nombresTzolkin[segmentoHoyTzolkin]}</p>
-        <p><b>Haab:</b> ${mesesHaab[segmentoHoyHaab]}</p>
-        <p><b>Ciclo Lunar:</b> Día ${segmentoHoyLunar + 1}</p>
+        <p><b>Tzolkin:</b> ${numeroTzolkin} ${nombresTzolkin[segmentoHoyTzolkin]} (Día ${diaTzolkin} de 260)</p>
+        <p><b>Haab:</b> ${numeroHaab} ${mesesHaab[segmentoHoyHaab]} (Día ${diaHaab} de 365)</p>
+        <p><b>Ciclo Lunar:</b> Día ${diaLunar} de 30</p>
+        <p><b>Calendario Largo:</b> ${longCount}</p>
     `;
 }
 
@@ -166,6 +198,24 @@ function avanzarDia() {
     const entradaFecha = document.getElementById("dateInput");
     const fechaActual = new Date(entradaFecha.value);
     fechaActual.setDate(fechaActual.getDate() + 1);
+    entradaFecha.value = fechaActual.toISOString().split("T")[0];
+    actualizarCalendarios();
+}
+
+// Avanzar una Trecena (13 días)
+function avanzarTrecena() {
+    const entradaFecha = document.getElementById("dateInput");
+    const fechaActual = new Date(entradaFecha.value);
+    fechaActual.setDate(fechaActual.getDate() + 13);
+    entradaFecha.value = fechaActual.toISOString().split("T")[0];
+    actualizarCalendarios();
+}
+
+// Avanzar un Mes Haab (20 días)
+function avanzarMesHaab() {
+    const entradaFecha = document.getElementById("dateInput");
+    const fechaActual = new Date(entradaFecha.value);
+    fechaActual.setDate(fechaActual.getDate() + 20);
     entradaFecha.value = fechaActual.toISOString().split("T")[0];
     actualizarCalendarios();
 }
